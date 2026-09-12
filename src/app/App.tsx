@@ -12,7 +12,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <DataSourceProvider>
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter basename="/QUANT-MIND">
             <AppRoutes />
           </BrowserRouter>
         </AuthProvider>
