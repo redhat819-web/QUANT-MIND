@@ -1,0 +1,467 @@
+﻿:root {
+  color-scheme: light dark;
+
+  --color-bg: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-text: #101114;
+  --color-text-muted: #9497a9;
+  --color-border: #dedee5;
+
+  --color-success: #149e61;      /* 시스템 성공. 등락 사용 금지 */
+  --color-error:   #8E2C24;
+  --color-rise:      #D42E3C;    /* 상승. 빨강 */
+  --color-rise-text: #B21F2C;
+  --color-fall:      #1B6FD4;    /* 하락. 파랑 */
+  --color-fall-text: #1558AA;
+  --color-warning: #a15c00;
+  --color-neutral: #5b6169;
+
+  --color-accent: #7132f5;
+  --color-accent-dark: #5741d8;
+  --color-stale: #8A8F86;
+
+  /* 레이아웃 간격: DESIGN.quantmind.md 2.5 — 8·16·24·32·48·64만 사용 */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 48px;
+  --space-6: 64px;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-sans:
+    'Pretendard Variable', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo',
+    'Malgun Gothic', sans-serif;
+
+  --shadow-subtle: rgba(0, 0, 0, 0.03) 0 4px 24px;
+  --shadow-micro: rgba(16, 24, 40, 0.04) 0 1px 4px;
+
+  --motion-duration: 160ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #16181c;
+    --color-surface: #1f2228;
+    --color-text: #eef0f2;
+    --color-text-muted: #a7adb5;
+    --color-border: #2c2f36;
+
+    --color-success: #4FD188;
+    --color-error:   #ff8a80;
+    --color-rise:      #E05A4E;
+    --color-rise-text: #F0796C;
+    --color-fall:      #5A8FDA;
+    --color-fall-text: #7BA8E8;
+    --color-warning: #ffc266;
+    --color-neutral: #a7adb5;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #16181c;
+  --color-surface: #1f2228;
+  --color-text: #eef0f2;
+  --color-text-muted: #a7adb5;
+  --color-border: #2c2f36;
+
+  --color-success: #4FD188;
+  --color-error:   #ff8a80;
+  --color-rise:      #E05A4E;
+  --color-rise-text: #F0796C;
+  --color-fall:      #5A8FDA;
+  --color-fall-text: #7BA8E8;
+  --color-warning: #ffc266;
+  --color-neutral: #a7adb5;
+}
+
+/* 헌장 원칙 XIV: 모든 애니메이션은 prefers-reduced-motion 사용자를 고려한다 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6; /* DESIGN.quantmind.md 2.3: 한글 본문 1.6 */
+}
+
+a {
+  color: var(--color-accent);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-micro);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.app-shell__brand::before {
+  content: '';
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+}
+
+.app-shell__nav nav {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.app-shell__nav nav a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: var(--space-1) 0;
+  border-bottom: 2px solid transparent;
+  transition: color var(--motion-duration), border-color var(--motion-duration);
+}
+
+.app-shell__nav nav a:hover {
+  color: var(--color-text);
+}
+
+.app-shell__nav nav a.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.app-shell__content {
+  flex: 1;
+  padding: var(--space-4);
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.app-shell__content h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em; /* DESIGN.quantmind.md 2.2: 한글은 -0.02em 이내로 제한 */
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+}
+
+.app-shell__content h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.app-shell__content section + section,
+.app-shell__content section {
+  margin-top: var(--space-5);
+}
+
+.app-shell__content section:first-child {
+  margin-top: 0;
+}
+
+.disclaimer-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-warning);
+  background: rgba(161, 92, 0, 0.08);
+  border: 1px solid rgba(161, 92, 0, 0.24);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px var(--space-1);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(148, 151, 169, 0.12);
+  color: var(--color-neutral);
+}
+
+.status-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-badge--success {
+  background: rgba(20, 158, 97, 0.14);
+  color: #026b3f;
+}
+
+.status-badge--error {
+  background: rgba(142, 44, 36, 0.12);
+  color: var(--color-error);
+}
+
+.status-badge--warning {
+  background: rgba(161, 92, 0, 0.12);
+  color: var(--color-warning);
+}
+
+.state {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.state-error {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.state-permission-denied {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-subtle);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card--highlight {
+  border: 1px solid var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(113, 50, 245, 0.08), var(--shadow-subtle);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+/* 버튼: DESIGN.md 4장 — 12px 반경, pill 금지(원칙 XXIII은 폰트만 대체, 반경 규격은 유지) */
+.btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--motion-duration), border-color var(--motion-duration),
+    box-shadow var(--motion-duration);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(113, 50, 245, 0.28);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+  box-shadow: 0 4px 12px rgba(113, 50, 245, 0.36);
+}
+
+.btn-outline {
+  background: var(--color-surface);
+  color: var(--color-accent-dark);
+  border-color: var(--color-accent-dark);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(113, 50, 245, 0.08);
+}
+
+.btn-secondary {
+  background: rgba(148, 151, 169, 0.08);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(148, 151, 169, 0.16);
+}
+
+.btn-secondary[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+/* 폼 요소: 입력/선택/텍스트영역 공통 골격 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+input[type='text'],
+input:not([type]),
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.list-reset {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-reset > li + li {
+  margin-top: var(--space-1);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.state-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin var(--motion-duration) linear infinite;
+  animation-duration: 800ms;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 표: DESIGN.quantmind.md 3.6 — 얼룩 배경 금지, 여백과 얇은 선으로 행 구분 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/*
+ * 헌장 원칙 XV: 좁은 뷰포트(375px 기준)에서 컬럼이 많은 테이블(계좌 요약/
+ * 종목 상세)이 레이아웃을 깨뜨리지 않도록, 테이블만 가로 스크롤되게 감싼다.
+ * 페이지 자체는 가로로 스크롤되지 않는다.
+ */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll > table {
+  min-width: 640px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.num--rise {
+  color: var(--color-rise-text);
+}
+
+.num--fall {
+  color: var(--color-fall-text);
+}
