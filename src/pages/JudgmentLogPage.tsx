@@ -4,6 +4,7 @@ import { DisclaimerBanner } from '../components/layout/DisclaimerBanner'
 import { ErrorState } from '../components/ui/ErrorState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { StatusBadge } from '../components/ui/StatusBadge'
+import { formatDateTime } from '../lib/format'
 import { AgendaForm } from '../features/judgment-log/components/AgendaForm'
 import { AgendaList } from '../features/judgment-log/components/AgendaList'
 import { AgreementConfirmButton } from '../features/judgment-log/components/AgreementConfirmButton'
@@ -19,6 +20,7 @@ import { useAgendas } from '../features/judgment-log/hooks/useAgendas'
 export function JudgmentLogPage() {
   const { user } = useAuth()
   const [selectedAgendaId, setSelectedAgendaId] = useState<string | null>(null)
+  const [isComposing, setIsComposing] = useState(false)
 
   const agendasQuery = useAgendas()
   const detailQuery = useAgendaDetail(selectedAgendaId)
@@ -39,48 +41,72 @@ export function JudgmentLogPage() {
 
   return (
     <div>
-      <DisclaimerBanner />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => setIsComposing((prev) => !prev)}
+        >
+          안건 작성
+        </button>
+      </div>
 
-      <section>
-        <h2>안건 작성</h2>
-        <AgendaForm
-          mode="create"
-          disabled={agendasQuery.createAgenda.isPending}
-          onSubmit={({ title, body }) => {
-            if (!user) return
-            agendasQuery.createAgenda.mutate({
-              title,
-              body,
-              authorUserId: user.id,
-              authorDisplayName: user.displayName,
-            })
-          }}
-        />
-      </section>
+      {isComposing ? (
+        <section style={{ marginBottom: 24 }}>
+          <h2>새 안건 작성</h2>
+          <AgendaForm
+            mode="create"
+            disabled={agendasQuery.createAgenda.isPending}
+            onSubmit={({ title, body }) => {
+              if (!user) return
+              agendasQuery.createAgenda.mutate({
+                title,
+                body,
+                authorUserId: user.id,
+                authorDisplayName: user.displayName,
+              })
+              setIsComposing(false)
+            }}
+          />
+        </section>
+      ) : null}
 
-      <section>
-        <h2>안건 목록</h2>
-        <AgendaList
-          agendas={agendasQuery.data}
-          selectedAgendaId={selectedAgendaId}
-          onSelectAgenda={setSelectedAgendaId}
-        />
-      </section>
+      <div className="judgment-log-layout">
+        <section>
+          <h2>안건 목록</h2>
+          <AgendaList
+            agendas={agendasQuery.data}
+            selectedAgendaId={selectedAgendaId}
+            onSelectAgenda={setSelectedAgendaId}
+          />
+        </section>
 
-      {selectedAgendaId ? (
         <section>
           <h2>안건 상세</h2>
-          {detailQuery.isLoading ? (
+          {!selectedAgendaId ? (
+            <p style={{ color: 'var(--color-text-muted)' }}>
+              좌측 목록에서 안건을 선택하면 상세 내용이 표시됩니다.
+            </p>
+          ) : detailQuery.isLoading ? (
             <LoadingState label="안건 상세를 불러오는 중" />
           ) : detailQuery.isError || !detailQuery.data ? (
             <ErrorState onRetry={() => detailQuery.refetch()} />
           ) : (
-            <div>
-              {detailQuery.data.agenda.status === 'discussing' ? (
-                <StatusBadge label="논의중" tone="warning" />
-              ) : (
-                <StatusBadge label="합의완료" tone="success" />
-              )}
+            <div className="agenda-detail-panel">
+              <div className="agenda-detail-panel__head">
+                <div>
+                  {detailQuery.data.agenda.status === 'discussing' ? (
+                    <StatusBadge label="논의중" tone="warning" />
+                  ) : (
+                    <StatusBadge label="합의완료" tone="neutral" />
+                  )}
+                  <h3 style={{ margin: '6px 0 0' }}>{detailQuery.data.agenda.title}</h3>
+                </div>
+                <span className="num" style={{ fontSize: '0.75rem' }}>
+                  작성자: {detailQuery.data.agenda.authorDisplayName} ·{' '}
+                  {formatDateTime(detailQuery.data.agenda.createdAt)}
+                </span>
+              </div>
 
               {canEdit ? (
                 <AgendaForm
@@ -98,41 +124,55 @@ export function JudgmentLogPage() {
                   }}
                 />
               ) : (
-                <div>
-                  <h3>{detailQuery.data.agenda.title}</h3>
-                  <p>{detailQuery.data.agenda.body}</p>
-                </div>
+                <p className="agenda-detail-panel__body">{detailQuery.data.agenda.body}</p>
               )}
 
-              <h3>의견</h3>
-              <OpinionThread
-                opinions={detailQuery.data.opinions}
-                disabled={detailQuery.addOpinion.isPending}
-                onSubmit={(body) => {
-                  if (!user) return
-                  detailQuery.addOpinion.mutate({
-                    body,
-                    authorUserId: user.id,
-                    authorDisplayName: user.displayName,
-                  })
-                }}
-              />
+              <div>
+                <h3>의견 이력</h3>
+                <OpinionThread
+                  opinions={detailQuery.data.opinions}
+                  disabled={detailQuery.addOpinion.isPending}
+                  onSubmit={(body) => {
+                    if (!user) return
+                    detailQuery.addOpinion.mutate({
+                      body,
+                      authorUserId: user.id,
+                      authorDisplayName: user.displayName,
+                    })
+                  }}
+                />
+              </div>
 
-              <AgreementConfirmButton
-                disabled={detailQuery.data.agenda.status === 'agreed'}
-                pending={detailQuery.confirmAgreement.isPending}
-                onConfirm={() => {
-                  if (!user) return
-                  detailQuery.confirmAgreement.mutate({
-                    confirmedByUserId: user.id,
-                    confirmedByDisplayName: user.displayName,
-                  })
-                }}
-              />
+              <div className="agreement-action-bar">
+                <p className="agreement-action-bar__hint">
+                  양측 의견 조율 후 언제든 합의를 확정할 수 있습니다.
+                </p>
+                <AgreementConfirmButton
+                  disabled={detailQuery.data.agenda.status === 'agreed'}
+                  pending={detailQuery.confirmAgreement.isPending}
+                  onConfirm={() => {
+                    if (!user) return
+                    detailQuery.confirmAgreement.mutate({
+                      confirmedByUserId: user.id,
+                      confirmedByDisplayName: user.displayName,
+                    })
+                  }}
+                />
+              </div>
+
+              {detailQuery.data.agreementRecord ? (
+                <p className="agreement-record-note">
+                  확정자: {detailQuery.data.agreementRecord.confirmedByDisplayName} · 확정
+                  시각: {formatDateTime(detailQuery.data.agreementRecord.confirmedAt)} ·
+                  확정 시점 의견 {detailQuery.data.agreementRecord.opinionCountAtConfirmation}건
+                </p>
+              ) : null}
             </div>
           )}
         </section>
-      ) : null}
+      </div>
+
+      <DisclaimerBanner />
     </div>
   )
 }

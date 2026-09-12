@@ -1,4 +1,4 @@
-import { formatKrw, formatReturnRate, returnRateToneClass } from '../../../lib/format'
+import { formatAsOfTimestamp, formatKrw, formatReturnRate, returnRateToneClass } from '../../../lib/format'
 import { StatusBadge } from '../../../components/ui/StatusBadge'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import type { AccountSummary } from '../../../types/domain'
@@ -28,7 +28,7 @@ export function AccountSummaryTable({
             <th scope="col">소유자</th>
             <th scope="col">합계 평가금액</th>
             <th scope="col">대표 손익률</th>
-            <th scope="col">동기화 상태</th>
+            <th scope="col">마지막 동기화</th>
           </tr>
         </thead>
         <tbody>
@@ -49,13 +49,14 @@ export function AccountSummaryTable({
                 {formatReturnRate(account.representativeReturnRate)}
               </td>
               <td>
+                <span className="num" style={{ color: 'var(--color-text-muted)' }}>
+                  {formatAsOfTimestamp(account.lastSyncedAt).replace('기준 시점: ', '').replace(' 기준', '')}
+                </span>
                 {account.lastSyncStatus === 'failed' ? (
-                  <StatusBadge label="동기화 실패" tone="error" />
-                ) : account.lastSyncStatus === 'success' ? (
-                  <StatusBadge label="동기화 성공" tone="success" />
-                ) : (
-                  <StatusBadge label="동기화 이력 없음" tone="neutral" />
-                )}
+                  <span style={{ marginLeft: 8 }}>
+                    <StatusBadge label="동기화 실패" tone="error" />
+                  </span>
+                ) : null}
               </td>
             </tr>
           ))}

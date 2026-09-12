@@ -1,8 +1,9 @@
 import type { Account } from '../../types/domain'
 
 /**
- * 정상 케이스 + 동기화 실패 케이스(계좌3)를 포함해 SyncStatusBanner의
- * has_sync_failure 배지(FR-024)를 mock 단계에서도 검증할 수 있게 한다.
+ * Stitch 목업(SCR-001/SCR-002)에 등장한 계좌 4개를 그대로 예시 데이터로 사용한다.
+ * 토스뱅크 파킹통장은 동기화 실패 케이스(FR-024 "일부 계좌 동기화 실패" 배지)를
+ * 재현하도록 last_sync_status='failed'로 둔다.
  */
 export const mockAccounts: Account[] = [
   {
@@ -10,8 +11,8 @@ export const mockAccounts: Account[] = [
     householdId: 'household-1',
     ownerUserId: 'user-me',
     ownerDisplayName: '나',
-    accountName: '나의 증권계좌 A',
-    lastSyncedAt: '2026-09-05T19:00:00+09:00',
+    accountName: 'KB증권 종합위탁',
+    lastSyncedAt: '2026-09-12T19:00:00+09:00',
     lastSyncStatus: 'success',
     lastSyncError: null,
   },
@@ -20,8 +21,8 @@ export const mockAccounts: Account[] = [
     householdId: 'household-1',
     ownerUserId: 'user-me',
     ownerDisplayName: '나',
-    accountName: '나의 연금계좌',
-    lastSyncedAt: '2026-09-05T19:00:00+09:00',
+    accountName: '신한투자증권 연금저축',
+    lastSyncedAt: '2026-09-12T19:00:00+09:00',
     lastSyncStatus: 'success',
     lastSyncError: null,
   },
@@ -30,9 +31,19 @@ export const mockAccounts: Account[] = [
     householdId: 'household-1',
     ownerUserId: 'user-partner',
     ownerDisplayName: '상대방',
-    accountName: '상대방 증권계좌 A',
-    lastSyncedAt: '2026-09-04T19:00:00+09:00',
+    accountName: '미래에셋 해외주식',
+    lastSyncedAt: '2026-09-12T18:45:00+09:00',
+    lastSyncStatus: 'success',
+    lastSyncError: null,
+  },
+  {
+    id: 'acc-partner-2',
+    householdId: 'household-1',
+    ownerUserId: 'user-partner',
+    ownerDisplayName: '상대방',
+    accountName: '토스뱅크 파킹통장',
+    lastSyncedAt: '2026-09-11T19:00:00+09:00',
     lastSyncStatus: 'failed',
-    lastSyncError: "시트 '계좌1' D12 셀 값이 숫자가 아님",
+    lastSyncError: "시트 '파킹통장' 열 형식이 예상과 달라 자동 인식 실패",
   },
 ]

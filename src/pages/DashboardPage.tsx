@@ -25,7 +25,6 @@ export function DashboardPage() {
         asOfSyncedAt={data.household.asOfSyncedAt}
         hasSyncFailure={data.household.hasSyncFailure}
       />
-      <DisclaimerBanner />
       <HouseholdAggregateCard
         me={data.me}
         partner={data.partner}
@@ -39,6 +38,7 @@ export function DashboardPage() {
         <h2>논의 중인 안건</h2>
         <AgendaSummaryList agendas={data.discussingAgendas} />
       </section>
+      <DisclaimerBanner />
     </div>
   )
 }

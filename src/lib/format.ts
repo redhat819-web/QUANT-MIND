@@ -10,7 +10,7 @@ export function formatKrw(value: number): string {
 
 export function formatReturnRate(rate: number): string {
   const sign = rate > 0 ? '+' : ''
-  return `${sign}${(rate * 100).toFixed(1)}%`
+  return `${sign}${(rate * 100).toFixed(2)}%`
 }
 
 /** 등락 색상 클래스 결정(헌장 원칙 XXI: 상승 빨강 / 하락 파랑, 초록 미사용) */
@@ -21,7 +21,7 @@ export function returnRateToneClass(rate: number): string {
 }
 
 export function formatWeightRatio(ratio: number): string {
-  return `${(ratio * 100).toFixed(1)}%`
+  return `${(ratio * 100).toFixed(2)}%`
 }
 
 /** "기준 시점: YYYY-MM-DD HH:mm 기준" 형태로 변환 (FR-024) */

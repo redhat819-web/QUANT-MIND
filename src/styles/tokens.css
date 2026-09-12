@@ -214,6 +214,7 @@ a {
   margin: 0 0 var(--space-3);
 }
 
+/* 배지: 채우지 않고 테두리만(DESIGN.quantmind.md 오버레이) */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -221,9 +222,9 @@ a {
   font-size: 0.8rem;
   font-weight: 600;
   padding: 3px var(--space-1);
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: rgba(148, 151, 169, 0.12);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
   color: var(--color-neutral);
 }
 
@@ -235,17 +236,17 @@ a {
 }
 
 .status-badge--success {
-  background: rgba(20, 158, 97, 0.14);
+  border-color: #026b3f;
   color: #026b3f;
 }
 
 .status-badge--error {
-  background: rgba(142, 44, 36, 0.12);
+  border-color: var(--color-error);
   color: var(--color-error);
 }
 
 .status-badge--warning {
-  background: rgba(161, 92, 0, 0.12);
+  border-color: var(--color-warning);
   color: var(--color-warning);
 }
 
@@ -464,4 +465,391 @@ th {
 
 .num--fall {
   color: var(--color-fall-text);
+}
+
+/*
+ * SCR-001 대시보드: 3단 집계 블록. 카드로 감싸지 않고 배경 위에 직접 배치
+ * (DESIGN.quantmind.md 3.2, 04_UIUX_PLAN.md 2.2). 부부 합계를 가장 크게,
+ * "나"/"상대방"은 동등한 크기·서식으로 배치한다.
+ */
+.stat-household {
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stat-household__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.stat-household__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.stat-household__value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.stat-tier-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (min-width: 640px) {
+  .stat-tier-group {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.stat-tier {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+@media (min-width: 640px) {
+  .stat-tier + .stat-tier {
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--color-border);
+  }
+}
+
+.stat-tier__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-tier__label {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stat-tier__meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.stat-tier__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.stat-tier__row-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.stat-tier__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+/* SCR-001: 성장/방어/현금 가로 누적 막대. 등락색(빨강/파랑) 재사용 금지 */
+.allocation-bar {
+  display: flex;
+  width: 100%;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.allocation-bar__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.allocation-bar__segment--growth {
+  background: var(--color-accent);
+}
+
+.allocation-bar__segment--defensive {
+  background: var(--color-neutral);
+}
+
+.allocation-bar__segment--cash {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.allocation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  list-style: none;
+  padding: 0;
+}
+
+.allocation-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.allocation-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* SCR-001: 논의 중인 안건 목록. 얼룩 배경 금지, 여백과 선으로만 행 구분 */
+.agenda-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.agenda-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 44px;
+}
+
+.agenda-summary-row__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* SCR-002: 빠른 확인/상세 모드 토글. pill 금지, 선택 상태만 보라 */
+.mode-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.mode-toggle__btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--motion-duration), color var(--motion-duration);
+}
+
+.mode-toggle__btn:hover {
+  color: var(--color-text);
+}
+
+.mode-toggle__btn[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+/* SCR-003: 판단 로그 2단 레이아웃 (좌측 목록 / 우측 상세) */
+.judgment-log-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .judgment-log-layout {
+    grid-template-columns: minmax(280px, 380px) 1fr;
+  }
+}
+
+.agenda-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.agenda-list-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.agenda-list-item:last-child {
+  border-bottom: none;
+}
+
+.agenda-list-item:hover {
+  background: rgba(148, 151, 169, 0.06);
+}
+
+.agenda-list-item[aria-pressed='true'] {
+  border-left-color: var(--color-accent);
+  background: rgba(113, 50, 245, 0.05);
+}
+
+.agenda-list-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-bottom: 6px;
+}
+
+.agenda-list-item__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+
+.agenda-list-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.agenda-detail-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.agenda-detail-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agenda-detail-panel__body {
+  background: rgba(148, 151, 169, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  line-height: var(--qm-leading-read, 1.6);
+  white-space: pre-wrap;
+}
+
+.opinion-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.opinion-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.agreement-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.agreement-action-bar__hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.agreement-record-note {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-1);
+  margin: 0;
+}
+
+/* SCR-004: 로그인. 단일 중앙 카드, 마케팅 요소 없음 */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: var(--color-bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: var(--space-5) var(--space-4);
+}
+
+.login-card__title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.login-card__subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+}
+
+.login-card__footer {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }

@@ -32,14 +32,16 @@ export function OpinionThread({ opinions, disabled = false, onSubmit }: OpinionT
       {opinions.length === 0 ? (
         <EmptyState message="아직 등록된 의견이 없습니다." />
       ) : (
-        <ul className="list-reset">
+        <ul className="list-reset" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opinions.map((opinion) => (
-            <li key={opinion.id} className="card">
-              <div>
-                <span>{opinion.authorDisplayName}</span>{' '}
-                <span>{formatDateTime(opinion.createdAt)}</span>
+            <li key={opinion.id} className="opinion-card">
+              <div className="opinion-card__meta">
+                <strong style={{ color: 'var(--color-text)' }}>
+                  {opinion.authorDisplayName}
+                </strong>
+                <span className="num">{formatDateTime(opinion.createdAt)}</span>
               </div>
-              <p>{opinion.body}</p>
+              <p style={{ margin: 0, fontSize: '0.85rem' }}>{opinion.body}</p>
             </li>
           ))}
         </ul>

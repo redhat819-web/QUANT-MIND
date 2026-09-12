@@ -16,29 +16,30 @@ export function AgendaList({ agendas, selectedAgendaId, onSelectAgenda }: Agenda
   }
 
   return (
-    <ul className="list-reset">
+    <ul className="agenda-list list-reset">
       {agendas.map((agenda) => (
-        <li
-          key={agenda.id}
-          className="card"
-          style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
-        >
+        <li key={agenda.id}>
           <button
             type="button"
+            className="agenda-list-item"
             aria-pressed={agenda.id === selectedAgendaId}
             onClick={() => onSelectAgenda(agenda.id)}
           >
-            {agenda.title}
+            <div className="agenda-list-item__head">
+              {agenda.status === 'discussing' ? (
+                <StatusBadge label="논의중" tone="warning" />
+              ) : (
+                <StatusBadge label="합의완료" tone="neutral" />
+              )}
+              <span className="num" style={{ fontSize: '0.75rem' }}>
+                {formatDateTime(agenda.createdAt)}
+              </span>
+            </div>
+            <p className="agenda-list-item__title">{agenda.title}</p>
+            <div className="agenda-list-item__meta">
+              <span>작성자: {agenda.authorDisplayName}</span>
+            </div>
           </button>
-          {agenda.status === 'discussing' ? (
-            <StatusBadge label="논의중" tone="warning" />
-          ) : (
-            <StatusBadge label="합의완료" tone="success" />
-          )}
-          <div>
-            <span>{agenda.authorDisplayName}</span>{' '}
-            <span>{formatDateTime(agenda.createdAt)}</span>
-          </div>
         </li>
       ))}
     </ul>
