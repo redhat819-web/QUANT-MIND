@@ -65,7 +65,7 @@ describe('DashboardPage', () => {
 
     expect(screen.getByText('나')).toBeInTheDocument()
     expect(screen.getByText('상대방')).toBeInTheDocument()
-    expect(screen.getByText('부부 합계')).toBeInTheDocument()
+    expect(screen.getByText('부부 합계 총 평가금액')).toBeInTheDocument()
     expect(screen.getByText('참고용 — 투자 권유 아님')).toBeInTheDocument()
     expect(screen.getByText(/기준 시점: 2026-09-04 19:00 기준/)).toBeInTheDocument()
     expect(screen.getByText('일부 계좌 동기화 실패')).toBeInTheDocument()

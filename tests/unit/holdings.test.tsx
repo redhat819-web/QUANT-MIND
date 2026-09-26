@@ -76,7 +76,7 @@ describe('HoldingsPage', () => {
     render(<HoldingsPage />)
 
     expect(screen.getByText('나의 증권계좌 A')).toBeInTheDocument()
-    expect(screen.getByText('+8.2%')).toBeInTheDocument()
+    expect(screen.getByText('+8.20%')).toBeInTheDocument()
     expect(screen.queryByText('종목 상세')).not.toBeInTheDocument()
   })
 

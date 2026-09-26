@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { JudgmentLogPage } from '../../src/pages/JudgmentLogPage'
 import * as useAgendasModule from '../../src/features/judgment-log/hooks/useAgendas'
@@ -89,9 +89,11 @@ describe('JudgmentLogPage', () => {
     })
     render(<JudgmentLogPage />)
 
+    fireEvent.click(screen.getByRole('button', { name: '안건 작성' })) // 작성 폼 열기
     fireEvent.change(screen.getByLabelText('제목'), { target: { value: '   ' } })
     fireEvent.change(screen.getByLabelText('내용'), { target: { value: '내용입니다' } })
-    fireEvent.click(screen.getByRole('button', { name: '안건 작성' }))
+    const form = screen.getByLabelText('제목').closest('form')!
+    fireEvent.click(within(form).getByRole('button', { name: '안건 작성' }))
 
     expect(mutate).not.toHaveBeenCalled()
     expect(screen.getByRole('alert')).toBeInTheDocument()
@@ -117,14 +119,14 @@ describe('JudgmentLogPage', () => {
       confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
     })
     const { unmount } = render(<JudgmentLogPage />)
-    fireEvent.click(screen.getByRole('button', { name: '해외 ETF 비중 논의' }))
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
     expect(screen.getByRole('button', { name: '수정 저장' })).toBeInTheDocument()
     unmount()
 
     // 타인(상대방)
     mockUseAuth('user-partner', '상대방')
     render(<JudgmentLogPage />)
-    fireEvent.click(screen.getByRole('button', { name: '해외 ETF 비중 논의' }))
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
     expect(screen.queryByRole('button', { name: '수정 저장' })).not.toBeInTheDocument()
     expect(screen.getByText('해외 ETF 비중 논의', { selector: 'h3' })).toBeInTheDocument()
   })
@@ -148,7 +150,7 @@ describe('JudgmentLogPage', () => {
       confirmAgreement: { mutate: confirmMutate, isPending: false } as never,
     })
     render(<JudgmentLogPage />)
-    fireEvent.click(screen.getByRole('button', { name: '해외 ETF 비중 논의' }))
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
 
     const confirmButton = screen.getByRole('button', { name: '합의 확정' })
     expect(confirmButton).toBeEnabled()
@@ -178,7 +180,7 @@ describe('JudgmentLogPage', () => {
       confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
     })
     render(<JudgmentLogPage />)
-    fireEvent.click(screen.getByRole('button', { name: '해외 ETF 비중 논의' }))
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
 
     fireEvent.change(screen.getByLabelText('의견 작성'), {
       target: { value: '좋은 생각이야' },
