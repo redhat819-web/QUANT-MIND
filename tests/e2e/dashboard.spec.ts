@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { loginAsMockUser } from './helpers/login'
 
 /**
  * User Story 1 Given-When-Then 시나리오(spec.md Acceptance Scenarios 1-8).
@@ -8,10 +9,9 @@ test.describe('대시보드 - 통합 자산 현황과 비중 확인', () => {
   test('로그인 후 개인/부부 통합, 비중, 안건 요약, 기준 시점이 모두 표시된다', async ({
     page,
   }) => {
-    await page.goto('/dashboard')
+    await page.goto('dashboard')
 
-    await expect(page.getByRole('button', { name: '로그인 (Mock)' })).toBeVisible()
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await loginAsMockUser(page)
 
     await expect(page.getByText('나')).toBeVisible()
     await expect(page.getByText('상대방')).toBeVisible()
@@ -26,7 +26,7 @@ test.describe('대시보드 - 통합 자산 현황과 비중 확인', () => {
   test('로그인하지 않으면 로그인 안내로 이동하고 자산 데이터는 표시되지 않는다', async ({
     page,
   }) => {
-    await page.goto('/dashboard')
+    await page.goto('dashboard')
     await expect(page.getByText('권한 없음')).toBeVisible()
     await expect(page.getByText('부부 합계')).toHaveCount(0)
   })

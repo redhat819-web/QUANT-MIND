@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { loginAsMockUser } from './helpers/login'
 
 /**
  * User Story 3 Given-When-Then 시나리오(spec.md Acceptance Scenarios).
@@ -8,8 +9,8 @@ test.describe('판단 로그 - 안건 작성과 합의 기록', () => {
   test('안건 작성 → 의견 등록 → 합의 확정 → 재조회까지 완결된 흐름으로 동작한다', async ({
     page,
   }) => {
-    await page.goto('/judgment-log')
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await page.goto('judgment-log')
+    await loginAsMockUser(page)
 
     await page.getByLabel('제목').fill('배당주 비중 조정 논의')
     await page.getByLabel('내용').fill('배당주 비중을 늘리는 방안에 대해 논의해보자.')
@@ -27,8 +28,8 @@ test.describe('판단 로그 - 안건 작성과 합의 기록', () => {
   })
 
   test('의견 0건 상태에서도 합의를 확정할 수 있다(FR-019)', async ({ page }) => {
-    await page.goto('/judgment-log')
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await page.goto('judgment-log')
+    await loginAsMockUser(page)
 
     await page.getByLabel('제목').fill('의견 없이 바로 확정')
     await page.getByLabel('내용').fill('별다른 이견이 없어 바로 확정하는 안건이다.')
@@ -43,8 +44,8 @@ test.describe('판단 로그 - 안건 작성과 합의 기록', () => {
   })
 
   test('논의중 안건은 작성자 본인만 수정 폼을 볼 수 있다(FR-016a)', async ({ page }) => {
-    await page.goto('/judgment-log')
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await page.goto('judgment-log')
+    await loginAsMockUser(page)
 
     await page.getByRole('button', { name: '연금계좌 추가 납입 시점 논의' }).click()
     await expect(page.getByRole('button', { name: '수정 저장' })).toHaveCount(0)

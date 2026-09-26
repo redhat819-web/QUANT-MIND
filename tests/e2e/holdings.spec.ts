@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { loginAsMockUser } from './helpers/login'
 
 /**
  * User Story 2 Given-When-Then 시나리오(spec.md Acceptance Scenarios).
@@ -8,8 +9,8 @@ test.describe('계좌·종목 리스트 - 상세 조회와 분류 수정', () =>
   test('빠른 확인 모드 → 상세 모드 → 분류 변경까지 완결된 흐름으로 동작한다', async ({
     page,
   }) => {
-    await page.goto('/holdings')
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await page.goto('holdings')
+    await loginAsMockUser(page)
 
     await expect(page.getByText('나의 증권계좌 A')).toBeVisible()
     await expect(page.getByText('상대방 증권계좌 A')).toBeVisible()
@@ -25,8 +26,8 @@ test.describe('계좌·종목 리스트 - 상세 조회와 분류 수정', () =>
   })
 
   test('미매핑 종목은 원본 표기와 함께 배지로 노출된다', async ({ page }) => {
-    await page.goto('/holdings')
-    await page.getByRole('button', { name: '로그인 (Mock)' }).click()
+    await page.goto('holdings')
+    await loginAsMockUser(page)
 
     await page.getByRole('button', { name: '상세 모드' }).click()
     await page.getByRole('button', { name: '상대방 증권계좌 A' }).click()

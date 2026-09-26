@@ -9,7 +9,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
   },
   use: {
-    baseURL: 'http://localhost:5173',
+    // vite.config.ts의 base('/QUANT-MIND/')와 반드시 일치시킬 것. 끝의 / 필수
+    baseURL: 'http://localhost:5173/QUANT-MIND/',
   },
   projects: [
     {
