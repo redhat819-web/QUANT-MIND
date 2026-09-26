@@ -21,6 +21,7 @@ export function QuickModeToggle({ mode, onChange }: QuickModeToggleProps) {
         type="button"
         className="mode-toggle__btn"
         aria-pressed={mode === 'detail'}
+        aria-label="상세 모드"
         onClick={() => onChange('detail')}
       >
         상세
