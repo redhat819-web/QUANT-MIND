@@ -275,10 +275,13 @@ Sheets 어댑터(Phase 8) 시작 가능
 
 ---
 
-## Phase 7.1: 회귀 수정 (64cf589 UI 리팩터 대응)
+## Phase 7.1: 회귀 수정 (9/12 UI 리팩터 · 배포 설정 대응)
 
-**Purpose**: `64cf589`(Refine scroll interactions)에서 화면 문구·흐름·포맷이
-바뀌며 발생한 단위/E2E 테스트 회귀(T019, T020, T029, T038)를 해결한다.
+**Purpose**: 9/12 커밋들에서 생긴 테스트 회귀(T019, T020, T029, T038)를 해결한다.
+- `64cf589`(Refine scroll interactions): 화면 문구·흐름·포맷 변경, 로그인 방식
+  교체 → T074~T076
+- `de22c7b` / `7ece3c5`(GitHub Pages 배포): vite base 경로 추가, e2e 설정
+  미갱신 → T077
 
 - [ ] T074 `QuickModeToggle`의 "상세" 버튼에 `aria-label="상세 모드"` 추가(64cf589
       회귀 대응, 접근성 이름과 표시 텍스트 분리) in
@@ -289,6 +292,21 @@ Sheets 어댑터(Phase 8) 시작 가능
 - [ ] T076 E2E 로그인 흐름을 이메일·비밀번호 입력 방식으로 갱신 + 공통 로그인
       도우미 추출 in `tests/e2e/dashboard.spec.ts`, `tests/e2e/holdings.spec.ts`,
       `tests/e2e/judgment-log.spec.ts`, `tests/e2e/helpers/login.ts`
+- [ ] T077 e2e를 GitHub Pages base 경로(`/QUANT-MIND/`)에 맞춤: playwright
+      baseURL 수정 + spec의 `page.goto` 경로를 상대 경로로 변경(`de22c7b`/
+      `7ece3c5` 배포 작업 대응) in `playwright.config.ts`,
+      `tests/e2e/dashboard.spec.ts`, `tests/e2e/holdings.spec.ts`,
+      `tests/e2e/judgment-log.spec.ts`
+- [ ] T078 Mock fixture의 계좌·증권사명을 일반화된 이름("나의 증권계좌 A" 등,
+      64cf589 이전 상태)으로 복원(실제 금융사명 노출 방지 원칙) in
+      `src/mocks/fixtures/accounts.ts`
+- [ ] T079 e2e를 64cf589 UI 변경에 맞춤: "성장자산" 등 실제 문구, 안건 작성 폼
+      열기 단계 추가, 안건 버튼 조회를 제목 포함 방식으로 변경 in
+      `tests/e2e/dashboard.spec.ts`, `tests/e2e/judgment-log.spec.ts`
+- [ ] T080 비로그인 접근 시 로그인 화면에서 "권한 없음" 안내가 다시 보이도록
+      복구(64cf589에서 `PermissionDeniedState` 사용이 제거된 회귀) + spec.md
+      FR-002를 "로그인 화면으로 이동해 로그인 안내를 표시"로 문구 명확화 in
+      `src/pages/LoginPage.tsx`, `specs/001-quant-mind-dashboard/spec.md`
 
 **Note (U4 메모)**: Mock 로그인은 `VITE_DATA_SOURCE=mock`일 때만 동작하는지
 확인 필요 — U4(인증) 착수 시 `AuthProvider`를 실제 세션 구독으로 교체하면서
