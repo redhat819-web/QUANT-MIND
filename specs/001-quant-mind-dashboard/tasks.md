@@ -275,6 +275,29 @@ Sheets 어댑터(Phase 8) 시작 가능
 
 ---
 
+## Phase 7.1: 회귀 수정 (64cf589 UI 리팩터 대응)
+
+**Purpose**: `64cf589`(Refine scroll interactions)에서 화면 문구·흐름·포맷이
+바뀌며 발생한 단위/E2E 테스트 회귀(T019, T020, T029, T038)를 해결한다.
+
+- [ ] T074 `QuickModeToggle`의 "상세" 버튼에 `aria-label="상세 모드"` 추가(64cf589
+      회귀 대응, 접근성 이름과 표시 텍스트 분리) in
+      `src/features/holdings/components/QuickModeToggle.tsx`
+- [ ] T075 단위 테스트를 64cf589 UI 변경에 맞춰 갱신(검증 의도는 유지, 조회 방식만
+      화면에 맞춤) in `tests/unit/dashboard.test.tsx`, `tests/unit/holdings.test.tsx`,
+      `tests/unit/judgment-log.test.tsx`
+- [ ] T076 E2E 로그인 흐름을 이메일·비밀번호 입력 방식으로 갱신 + 공통 로그인
+      도우미 추출 in `tests/e2e/dashboard.spec.ts`, `tests/e2e/holdings.spec.ts`,
+      `tests/e2e/judgment-log.spec.ts`, `tests/e2e/helpers/login.ts`
+
+**Note (U4 메모)**: Mock 로그인은 `VITE_DATA_SOURCE=mock`일 때만 동작하는지
+확인 필요 — U4(인증) 착수 시 `AuthProvider`를 실제 세션 구독으로 교체하면서
+재검증할 것.
+
+**Checkpoint**: T019/T020/T029/T038 회귀 해결, lint/test/build/e2e 전체 통과
+
+---
+
 ## Phase 8: Sheets 어댑터(U5) — Google Sheets → Supabase → US1/US2 실데이터
 
 **Goal**: Mock을 실제 Google Sheets 기반 스냅샷(Apps Script → Supabase)으로
