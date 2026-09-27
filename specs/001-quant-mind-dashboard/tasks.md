@@ -283,13 +283,13 @@ Sheets 어댑터(Phase 8) 시작 가능
 - `de22c7b` / `7ece3c5`(GitHub Pages 배포): vite base 경로 추가, e2e 설정
   미갱신 → T077
 
-- [ ] T074 `QuickModeToggle`의 "상세" 버튼에 `aria-label="상세 모드"` 추가(64cf589
+- [X] T074 `QuickModeToggle`의 "상세" 버튼에 `aria-label="상세 모드"` 추가(64cf589
       회귀 대응, 접근성 이름과 표시 텍스트 분리) in
       `src/features/holdings/components/QuickModeToggle.tsx`
-- [ ] T075 단위 테스트를 64cf589 UI 변경에 맞춰 갱신(검증 의도는 유지, 조회 방식만
+- [X] T075 단위 테스트를 64cf589 UI 변경에 맞춰 갱신(검증 의도는 유지, 조회 방식만
       화면에 맞춤) in `tests/unit/dashboard.test.tsx`, `tests/unit/holdings.test.tsx`,
       `tests/unit/judgment-log.test.tsx`
-- [ ] T076 E2E 로그인 흐름을 이메일·비밀번호 입력 방식으로 갱신 + 공통 로그인
+- [X] T076 E2E 로그인 흐름을 이메일·비밀번호 입력 방식으로 갱신 + 공통 로그인
       도우미 추출 in `tests/e2e/dashboard.spec.ts`, `tests/e2e/holdings.spec.ts`,
       `tests/e2e/judgment-log.spec.ts`, `tests/e2e/helpers/login.ts`
 - [X] T077 e2e를 GitHub Pages base 경로(`/QUANT-MIND/`)에 맞춤: playwright
