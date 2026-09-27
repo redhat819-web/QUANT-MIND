@@ -18,9 +18,9 @@ test.describe('대시보드 - 통합 자산 현황과 비중 확인', () => {
     await expect(page.getByText('부부 합계')).toBeVisible()
     await expect(page.getByText('참고용 — 투자 권유 아님')).toBeVisible()
     await expect(page.getByText(/기준 시점:/)).toBeVisible()
-    await expect(page.getByText('성장', { exact: true })).toBeVisible()
-    await expect(page.getByText('방어', { exact: true })).toBeVisible()
-    await expect(page.getByText('현금', { exact: true })).toBeVisible()
+    await expect(page.getByText('성장자산', { exact: true })).toBeVisible()
+    await expect(page.getByText('방어자산', { exact: true })).toBeVisible()
+    await expect(page.getByText('현금성자산', { exact: true })).toBeVisible()
   })
 
   test('로그인하지 않으면 로그인 안내로 이동하고 자산 데이터는 표시되지 않는다', async ({
