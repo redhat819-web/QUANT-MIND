@@ -310,6 +310,12 @@ Sheets 어댑터(Phase 8) 시작 가능
       맞춤. **범위 축소**: `PermissionDeniedState` 복구는 보류(별도 지시로 제외,
       `src/pages/LoginPage.tsx` 미변경) in
       `specs/001-quant-mind-dashboard/spec.md`, `tests/e2e/dashboard.spec.ts`
+- [X] T081 holdings e2e 첫 번째 시나리오("빠른 확인 모드 → 상세 모드 → 분류
+      변경")를 현재 mock 데이터에 맞춤: hold-1(Apple, 나의 증권계좌 A)과
+      hold-2(삼성전자, 나의 증권계좌 B)가 64cf589 이후 서로 다른 계좌로
+      분리되어 계좌 미선택 상태로는 동시에 보이지 않던 회귀. 계좌를 명시적으로
+      선택한 뒤 각각 검증하도록 변경(화면 코드 변경 없음) in
+      `tests/e2e/holdings.spec.ts`
 
 **Note (U4 메모)**: Mock 로그인은 `VITE_DATA_SOURCE=mock`일 때만 동작하는지
 확인 필요 — U4(인증) 착수 시 `AuthProvider`를 실제 세션 구독으로 교체하면서

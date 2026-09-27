@@ -17,12 +17,15 @@ test.describe('계좌·종목 리스트 - 상세 조회와 분류 수정', () =>
     await expect(page.getByText('종목 상세')).toHaveCount(0)
 
     await page.getByRole('button', { name: '상세 모드' }).click()
-    await expect(page.getByText('삼성전자')).toBeVisible()
-    await expect(page.getByText('데이터 없음').first()).toBeVisible()
+    await page.getByRole('button', { name: '나의 증권계좌 A' }).click()
 
     const classificationSelect = page.getByLabel('hold-1 분류')
     await classificationSelect.selectOption('defensive')
     await expect(classificationSelect).toHaveValue('defensive')
+
+    await page.getByRole('button', { name: '나의 증권계좌 B' }).click()
+    await expect(page.getByText('삼성전자')).toBeVisible()
+    await expect(page.getByText('데이터 없음').first()).toBeVisible()
   })
 
   test('미매핑 종목은 원본 표기와 함께 배지로 노출된다', async ({ page }) => {
