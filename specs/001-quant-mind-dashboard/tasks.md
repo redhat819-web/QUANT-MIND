@@ -323,6 +323,22 @@ Sheets 어댑터(Phase 8) 시작 가능
 
 **Checkpoint**: T019/T020/T029/T038 회귀 해결, lint/test/build/e2e 전체 통과
 
+## Phase 7.2 — 배포 안전장치
+
+**Purpose**: GitHub Pages 공개 배포본이 검증되지 않은 코드나 실데이터로 나가지
+않도록 CI 단계에서 막는다.
+
+- [X] T082 배포 워크플로(`build` job)에 lint(`npm run lint`)·단위 테스트
+      (`npm run test`) 단계를 빌드 전에 추가. `deploy` job이 `needs: build`이므로
+      실패 시 배포가 자동 중단됨 in `.github/workflows/deploy.yml`
+- [X] T083 배포 워크플로에서 `VITE_DATA_SOURCE`가 `mock`이 아니면 빌드를
+      명시적으로 실패 처리(현재는 하드코딩된 값이지만, 실데이터 연동 전까지
+      공개 배포본은 Mock만 허용한다는 불변식을 CI에서 강제) in
+      `.github/workflows/deploy.yml`
+
+**Checkpoint**: 워크플로 YAML 구문 검증(js-yaml) 통과, guard 스크립트 로직
+로컬 bash로 검증(mock→통과, 그 외 값→exit 1)
+
 ---
 
 ## Phase 8: Sheets 어댑터(U5) — Google Sheets → Supabase → US1/US2 실데이터
