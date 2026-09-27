@@ -27,7 +27,7 @@ test.describe('대시보드 - 통합 자산 현황과 비중 확인', () => {
     page,
   }) => {
     await page.goto('dashboard')
-    await expect(page.getByText('권한 없음')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'QUANT-MIND' })).toBeVisible()
     await expect(page.getByText('부부 합계')).toHaveCount(0)
   })
 })
