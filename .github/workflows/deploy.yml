@@ -35,6 +35,15 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      - name: Guard against non-mock data source
+        env:
+          VITE_DATA_SOURCE: mock
+        run: |
+          if [ "$VITE_DATA_SOURCE" != "mock" ]; then
+            echo "::error::VITE_DATA_SOURCE must be 'mock' for public GitHub Pages deploys (got '$VITE_DATA_SOURCE'). Real data sources are not allowed until Supabase integration ships."
+            exit 1
+          fi
+
       - name: Build
         env:
           VITE_DATA_SOURCE: mock
