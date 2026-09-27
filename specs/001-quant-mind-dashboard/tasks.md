@@ -358,16 +358,28 @@ Sheets 어댑터(Phase 8) 시작 가능
       허용하는 오퍼레이션만 GRANT. anon 키로 13개 테이블/뷰 전체 조회 시
       401 permission denied 확인 in
       `supabase/migrations/20260927121301_rls_and_grants.sql`
-- [ ] T051 [P] `syncSnapshot.gs` 구현 — 시트 값 읽기 전용, 표준 페이로드 변환,
-      `upsert_snapshot` RPC 호출 in `apps-script/src/syncSnapshot.gs`
+- [X] T051 `syncSnapshot.gs` 구현 — 포트폴리오(본인·자녀 블록형) + Account
+      Board(예수금) + 배우자_주식현황/배우자_자산 읽기 전용, 표준 페이로드 변환,
+      `upsert_snapshot` RPC 호출. clasp push 완료(Moamind Sync 프로젝트) in
+      `apps-script/src/syncSnapshot.gs`, `PortfolioReader.gs`, `SpouseReader.gs`
       (contracts/apps-script-payload.md, 헌장 원칙 IX)
-- [ ] T052 [P] `mappingHelpers.gs` 구현 — `mapping_rule` 조회 및 `security_key`
-      결정 로직 in `apps-script/src/mappingHelpers.gs` (FR-015)
-- [ ] T053 Apps Script 시간 기반 트리거(매일 저녁 7시, Asia/Seoul) + 스프레드시트
-      커스텀 메뉴 "지금 동기화" 등록 in `apps-script/appsscript.json` /
-      `apps-script/src/syncSnapshot.gs`
-- [ ] T054 `syncSnapshot.gs`에 실패 처리 추가 — try/catch로 감싸 실패 시에도
-      `upsert_sync_status` RPC 호출 및 Stackdriver 로그 기록
+- [X] T052 `mapping_rule` 조회 및 `security_key`/`is_mapped` 결정 로직(FR-015).
+      **구현 위치 변경**: 별도 `mappingHelpers.gs` 대신 `upsert_snapshot` SQL
+      함수(서버 측)에 구현 — contracts/apps-script-payload.md의 "수신 측이
+      mapping_rule을 조회해 채운다"는 원 계약과 일치시키기 위함 in
+      `supabase/migrations/20260927140000_upsert_snapshot.sql`
+- [X] T053 Apps Script 시간 기반 트리거(매일 저녁 7시, Asia/Seoul, `ensureDailyTrigger()`)
+      + 스프레드시트 커스텀 메뉴 "지금 동기화"(`onOpen()`) 등록 in
+      `apps-script/src/syncSnapshot.gs`, `apps-script/src/appsscript.json`
+- [X] T054 `syncSnapshot.gs`에 실패 처리 추가 — 탭 읽기 실패는 전체 동기화 중단 +
+      Stackdriver 로그, 블록/합계 검증 실패는 해당 계좌만
+      `sync_status='failed'`로 `upsert_snapshot` payload에 포함(내부적으로
+      `last_synced_at` 미갱신) in `apps-script/src/syncSnapshot.gs`
+
+**참고(가정 미검증)**: Account Board(예수금) 헤더 탐지("계좌"+"예수금" 텍스트
+동일 행)와 환율표 탐지("환율" 셀 우측 숫자)는 실제 시트를 열어보지 못한 채
+사용자 설명만으로 구현한 가정이다. 실제 실행 시 구조가 다르면 즉시 에러로
+멈추도록 설계했으나, 최초 실행 결과 확인 전까지는 미검증 상태.
 - [ ] T055 Supabase 어댑터 구현 — `useAccounts`/`useHoldingDetail`/
       `useDashboardSummary`가 `personal_aggregate_view`/
       `household_aggregate_view`/`allocation_view`를 조회하도록 구현 in
