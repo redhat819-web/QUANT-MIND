@@ -346,11 +346,18 @@ Sheets 어댑터(Phase 8) 시작 가능
 **Goal**: Mock을 실제 Google Sheets 기반 스냅샷(Apps Script → Supabase)으로
 교체해 대시보드·계좌·종목 리스트가 실데이터로 동작
 
-- [ ] T049 Supabase 프로젝트에 `contracts/supabase-schema.sql` 적용(테이블,
+- [X] T049 Supabase 프로젝트("Moamind")에 스키마 적용(테이블,
       `personal_aggregate_view`/`household_aggregate_view`/`allocation_view`/
-      `public_allocation_view`, 트리거, `upsert_sync_status` 함수)
-- [ ] T050 Supabase 프로젝트에 `contracts/rls-policies.sql` 적용(household 단위
-      정책, `is_household_member` 함수)
+      `public_allocation_view`, 트리거, `upsert_sync_status` 함수). 계약보다
+      확장: 모든 view에 `security_invoker = true`, `weighted_return_rate`는
+      `average_cost`가 null인 종목을 제외하고 계산(합계는 포함) in
+      `supabase/migrations/20260927121300_schema.sql`
+- [X] T050 Supabase 프로젝트에 RLS 정책 적용(household 단위 정책,
+      `is_household_member` 함수) + 역할별 GRANT 명시: `anon`은 스키마/테이블/
+      뷰/함수 전체(향후 생성물 포함) 권한 회수, `authenticated`는 정책이
+      허용하는 오퍼레이션만 GRANT. anon 키로 13개 테이블/뷰 전체 조회 시
+      401 permission denied 확인 in
+      `supabase/migrations/20260927121301_rls_and_grants.sql`
 - [ ] T051 [P] `syncSnapshot.gs` 구현 — 시트 값 읽기 전용, 표준 페이로드 변환,
       `upsert_snapshot` RPC 호출 in `apps-script/src/syncSnapshot.gs`
       (contracts/apps-script-payload.md, 헌장 원칙 IX)
