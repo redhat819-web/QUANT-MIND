@@ -6,14 +6,42 @@
 
 var SPOUSE_TOTAL_MARKER = '합계';
 
+/**
+ * 헤더 행에서 라벨별 열 인덱스를 전부 모은 뒤, "마지막(두 번째) occurrence만
+ * 쓰는" 열(costKrw="매입가")과 "첫 occurrence를 쓰는" 나머지 열을 구분해 반환한다.
+ * 증권사(A열)는 헤더가 없어 열 인덱스 0으로 고정한다.
+ */
+function findSpouseStockColumns_(headerRowValues) {
+  var occurrences = {};
+  for (var c = 0; c < headerRowValues.length; c++) {
+    var label = String(headerRowValues[c] || '').trim();
+    if (label === '') continue;
+    if (!occurrences[label]) occurrences[label] = [];
+    occurrences[label].push(c);
+  }
+
+  var keys = Object.keys(SPOUSE_STOCK_HEADERS);
+  var columns = { broker: 0 };
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var label = SPOUSE_STOCK_HEADERS[key];
+    var cols = occurrences[label];
+    if (!cols || cols.length === 0) {
+      throw new Error('HEADER_NOT_FOUND:spouse-stocks:' + label);
+    }
+    columns[key] = key === 'costKrw' ? cols[cols.length - 1] : cols[0];
+  }
+  return columns;
+}
+
 function readSpouseStocksSheet_(spreadsheet) {
   var sheet = getSheetByNameStrict_(spreadsheet, SHEET_SPOUSE_STOCKS);
   var values = sheet.getDataRange().getValues();
   if (values.length < 2) {
-    throw new Error('배우자_주식현황: 데이터 행이 없음');
+    throw new Error('SPOUSE_STOCKS_EMPTY');
   }
 
-  var cols = findHeaderColumns_(values[0], SPOUSE_STOCK_HEADERS, 'spouse-stocks');
+  var cols = findSpouseStockColumns_(values[0]);
 
   var byBroker = {}; // 증권사 -> holdings[]
   var brokerOrder = [];
@@ -42,15 +70,6 @@ function readSpouseStocksSheet_(spreadsheet) {
       continue; // 보유수량·자산현황·매입가(원화)가 숫자가 아니면 종목으로 인정하지 않음
     }
 
-    var tickerLabel = String(values[r][cols.tickerLabel] || '').trim();
-    var ticker = null;
-    var parenIndex = tickerLabel.indexOf('(');
-    if (parenIndex !== -1) {
-      ticker = tickerLabel.substring(0, parenIndex).trim() || null;
-    } else if (tickerLabel !== '') {
-      ticker = tickerLabel;
-    }
-
     if (!byBroker[broker]) {
       byBroker[broker] = [];
       brokerOrder.push(broker);
@@ -64,7 +83,7 @@ function readSpouseStocksSheet_(spreadsheet) {
       market_value_krw: marketValue,
       return_rate: costKrw !== 0 ? (marketValue - costKrw) / costKrw : 0,
       cost_krw: costKrw,
-      ticker: ticker,
+      ticker: null,
       currency: null,
       average_cost: null,
       dividend: null,

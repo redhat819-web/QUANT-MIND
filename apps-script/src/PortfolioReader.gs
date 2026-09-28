@@ -18,7 +18,7 @@ function readPortfolioSheet_(spreadsheet) {
 
   var blocks = findPortfolioBlocks_(values);
   if (blocks.length === 0) {
-    throw new Error('포트폴리오 탭에서 계좌 블록을 찾지 못함(시트 구조 확인 필요)');
+    throw new Error('BLOCK_NOT_FOUND');
   }
 
   var blockAccountNames = {};
@@ -57,7 +57,7 @@ function findPortfolioBlocks_(values) {
         }
       }
       if (totalRow === -1) {
-        throw new Error('블록의 Total 행을 찾지 못함(블록 시작 행 ' + (r + 1) + ')');
+        throw new Error('BLOCK_TOTAL_ROW_NOT_FOUND:' + (r + 1));
       }
       blocks.push({
         blockStartRow: r,
@@ -86,7 +86,7 @@ function findHeaderColumns_(headerRowValues, headerLabels, context) {
       }
     }
     if (col === -1) {
-      throw new Error(context + ': 헤더 열을 찾지 못함(' + key + ')');
+      throw new Error('HEADER_NOT_FOUND:' + context + ':' + label);
     }
     columns[key] = col;
   }
@@ -221,7 +221,7 @@ function readAccountBoardCash_(values, boardEndRow, blockAccountNames) {
   }
 
   if (headerRow === -1) {
-    throw new Error('Account Board 헤더를 찾지 못함(시트 구조 확인 필요)');
+    throw new Error('BOARD_HEADER_NOT_FOUND');
   }
 
   var subHeaderRow = headerRow + 1;
@@ -235,7 +235,7 @@ function readAccountBoardCash_(values, boardEndRow, blockAccountNames) {
     }
   }
   if (krwCol === -1) {
-    throw new Error('Account Board KRW 하위 열을 찾지 못함(시트 구조 확인 필요)');
+    throw new Error('BOARD_SUBHEADER_NOT_FOUND');
   }
 
   var exchangeRate = usdCol !== -1 ? findExchangeRate_(values, boardEndRow) : null;
@@ -325,7 +325,7 @@ function readAccountBoardCash_(values, boardEndRow, blockAccountNames) {
   }
 
   if (unmappedCount > 0) {
-    throw new Error('Account Board 계좌명이 블록과 매핑되지 않음(스크립트 속성 BOARD_TO_BLOCK_ACCOUNT 확인 필요)');
+    throw new Error('ACCOUNT_MAPPING_REQUIRED');
   }
 
   return accounts;
@@ -357,6 +357,7 @@ function findExchangeRate_(values, boardEndRow) {
   }
 
   if (headerRow === -1) {
+    logSyncError_('fx-table', 'n/a', 'FX_ROW_NOT_FOUND');
     return null;
   }
 
@@ -369,5 +370,6 @@ function findExchangeRate_(values, boardEndRow) {
       }
     }
   }
+  logSyncError_('fx-table', 'n/a', 'FX_ROW_NOT_FOUND');
   return null;
 }

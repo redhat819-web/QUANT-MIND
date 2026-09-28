@@ -69,14 +69,17 @@ var PORTFOLIO_STOCK_HEADERS = {
 
 var PORTFOLIO_BLOCK_TOTAL_LABEL = 'Total';
 
-/** 배우자_주식현황 탭 1행 헤더에서 찾을 열 이름. */
+/**
+ * 배우자_주식현황 탭 헤더에서 찾을 열 이름. A1은 열 이름이 아니라 날짜 수식이고
+ * 증권사(A열)에는 열 이름이 없어 A열로 고정해서 읽는다. B1부터 열 이름이 있고
+ * "매입가"가 두 번 나온다(첫 번째: 단가, 두 번째: 자산현황 오른쪽 원화 매입금액) —
+ * costKrw는 마지막(두 번째) "매입가" occurrence를 쓴다.
+ */
 var SPOUSE_STOCK_HEADERS = {
-  broker: '증권사',
   name: '종목명',
   quantity: '보유수량',
   marketValueKrw: '자산현황',
-  costKrw: '매입가(원화)',
-  tickerLabel: '티커(설명)',
+  costKrw: '매입가',
 };
 
 /** 포트폴리오 탭 자산분류 한글 표기 → DB classification enum 매핑. */
@@ -133,7 +136,7 @@ function openAllowedSpreadsheet_() {
 function getSheetByNameStrict_(spreadsheet, sheetName) {
   var sheet = spreadsheet.getSheetByName(sheetName);
   if (!sheet) {
-    throw new Error('탭을 찾을 수 없음: ' + sheetName);
+    throw new Error('TAB_NOT_FOUND:' + sheetName);
   }
   return sheet;
 }

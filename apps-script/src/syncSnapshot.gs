@@ -17,7 +17,7 @@ function syncSnapshot() {
   } catch (err) {
     // 스프레드시트 자체를 열지 못하면 어떤 계좌에도 상태를 붙일 수 없다 — Stackdriver
     // 로그만 남기고 종료한다(T054).
-    logSyncError_('sync-root', 'n/a', 'SPREADSHEET_OPEN_FAILED');
+    logSyncError_('sync-root', 'n/a', 'FILE_OPEN_FAILED');
     throw err;
   }
 
@@ -27,21 +27,21 @@ function syncSnapshot() {
   try {
     accounts = accounts.concat(readPortfolioSheet_(spreadsheet));
   } catch (err) {
-    logSyncError_('portfolio', 'n/a', 'READ_FAILED');
+    logSyncError_('portfolio', 'n/a', err.message);
     fatal = true;
   }
 
   try {
     accounts = accounts.concat(readSpouseStocksSheet_(spreadsheet));
   } catch (err) {
-    logSyncError_('spouse-stocks', 'n/a', 'READ_FAILED');
+    logSyncError_('spouse-stocks', 'n/a', err.message);
     fatal = true;
   }
 
   try {
     accounts = accounts.concat(readSpouseAssetsSheet_(spreadsheet));
   } catch (err) {
-    logSyncError_('spouse-assets', 'n/a', 'READ_FAILED');
+    logSyncError_('spouse-assets', 'n/a', err.message);
     fatal = true;
   }
 
