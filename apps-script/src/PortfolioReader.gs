@@ -72,24 +72,71 @@ function findPortfolioBlocks_(values) {
   return blocks;
 }
 
-function findHeaderColumns_(headerRowValues, headerLabels, context) {
+/**
+ * 병합 셀은 왼쪽 첫 칸에만 값이 있으므로, topRowValues[col]에서 왼쪽으로 가장
+ * 가까운 비어있지 않은 칸의 값을 그 칸이 속한 묶음 제목으로 본다.
+ */
+function findMergedGroupLabel_(topRowValues, col) {
+  for (var c = col; c >= 0; c--) {
+    var text = String(topRowValues[c] || '').trim();
+    if (text !== '') {
+      return text;
+    }
+  }
+  return '';
+}
+
+/**
+ * 블록의 2줄 헤더(윗줄=병합 묶음 제목, 아랫줄="종목명" 행)에서 종목 열 인덱스를
+ * 찾는다. costKrw/marketValueKrw는 아랫줄 "원화" 칸 중 윗줄 묶음 제목이 각각
+ * "매수가"/"현재가"인 첫 칸을 쓴다.
+ */
+function findPortfolioBlockColumns_(values, block) {
+  var topRow = values[block.blockStartRow];
+  var bottomRow = values[block.headerRow];
+
   var columns = {};
-  var keys = Object.keys(headerLabels);
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var label = headerLabels[key];
-    var col = -1;
-    for (var c = 0; c < headerRowValues.length; c++) {
-      if (String(headerRowValues[c] || '').trim() === label) {
-        col = c;
-        break;
+  var costCol = -1;
+  var marketCol = -1;
+
+  for (var c = 0; c < bottomRow.length; c++) {
+    var label = String(bottomRow[c] || '').trim();
+    if (label === PORTFOLIO_STOCK_HEADERS.name && columns.name === undefined) {
+      columns.name = c;
+    } else if (label === PORTFOLIO_STOCK_HEADERS.code && columns.code === undefined) {
+      columns.code = c;
+    } else if (label === PORTFOLIO_STOCK_HEADERS.classification && columns.classification === undefined) {
+      columns.classification = c;
+    } else if (label === PORTFOLIO_STOCK_HEADERS.currency && columns.currency === undefined) {
+      columns.currency = c;
+    } else if (label === PORTFOLIO_STOCK_HEADERS.quantity && columns.quantity === undefined) {
+      columns.quantity = c;
+    } else if (label === PORTFOLIO_STOCK_HEADERS.krwSubLabel) {
+      var groupLabel = findMergedGroupLabel_(topRow, c);
+      if (groupLabel === PORTFOLIO_STOCK_HEADERS.costGroupLabel && costCol === -1) {
+        costCol = c;
+      } else if (groupLabel === PORTFOLIO_STOCK_HEADERS.marketGroupLabel && marketCol === -1) {
+        marketCol = c;
       }
     }
-    if (col === -1) {
-      throw new Error('HEADER_NOT_FOUND:' + context + ':' + label);
-    }
-    columns[key] = col;
   }
+
+  var simpleKeys = ['name', 'code', 'classification', 'currency', 'quantity'];
+  for (var i = 0; i < simpleKeys.length; i++) {
+    var key = simpleKeys[i];
+    if (columns[key] === undefined) {
+      throw new Error('HEADER_NOT_FOUND:portfolio-block:' + PORTFOLIO_STOCK_HEADERS[key]);
+    }
+  }
+  if (costCol === -1) {
+    throw new Error('HEADER_NOT_FOUND:portfolio-block:' + PORTFOLIO_STOCK_HEADERS.costGroupLabel + '/' + PORTFOLIO_STOCK_HEADERS.krwSubLabel);
+  }
+  if (marketCol === -1) {
+    throw new Error('HEADER_NOT_FOUND:portfolio-block:' + PORTFOLIO_STOCK_HEADERS.marketGroupLabel + '/' + PORTFOLIO_STOCK_HEADERS.krwSubLabel);
+  }
+
+  columns.costKrw = costCol;
+  columns.marketValueKrw = marketCol;
   return columns;
 }
 
@@ -102,7 +149,7 @@ function toNumberOrNull_(value) {
 }
 
 function buildPortfolioAccountPayload_(values, block) {
-  var cols = findHeaderColumns_(values[block.headerRow], PORTFOLIO_STOCK_HEADERS, 'portfolio-block');
+  var cols = findPortfolioBlockColumns_(values, block);
 
   var isChild = getChildAccountNames_().indexOf(block.accountName) !== -1;
   var ownerType = isChild ? 'child' : 'member';
@@ -163,6 +210,12 @@ function buildPortfolioAccountPayload_(values, block) {
 
   var totalMarketValue = toNumberOrNull_(values[block.totalRow][cols.marketValueKrw]);
   if (syncError === null && (totalMarketValue === null || Math.abs(totalMarketValue - sumMarketValue) > 0.5)) {
+    syncError = 'BLOCK_SUM_MISMATCH';
+    logSyncError_('portfolio-block', block.totalRow + 1, syncError);
+  }
+
+  var totalCostKrw = toNumberOrNull_(values[block.totalRow][cols.costKrw]);
+  if (syncError === null && hasCostKrw && (totalCostKrw === null || Math.abs(totalCostKrw - sumCostKrw) > 0.5)) {
     syncError = 'BLOCK_SUM_MISMATCH';
     logSyncError_('portfolio-block', block.totalRow + 1, syncError);
   }

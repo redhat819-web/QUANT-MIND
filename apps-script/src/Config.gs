@@ -56,15 +56,25 @@ function getBoardToBlockAccountMap_() {
   return getJsonScriptProperty_('BOARD_TO_BLOCK_ACCOUNT', {});
 }
 
-/** 포트폴리오 탭 종목 블록의 헤더 행에서 찾을 열 이름(셀 주소 고정 금지). */
+/**
+ * 포트폴리오 탭 종목 블록은 2줄 헤더다(셀 주소 고정 금지):
+ * - 윗줄(블록 제목 행, 계좌명이 있는 행과 같은 행): "배당률"/"매수가"/"현재가"가
+ *   2칸씩 병합된 묶음 제목. 병합 셀은 왼쪽 첫 칸에만 값이 있다.
+ * - 아랫줄("종목명" 행): 종목명/종목코드/자산분류/통화/주식수/원화/외화 등.
+ * 원화 매입금액(costKrw)·원화 평가금액(marketValueKrw)은 아랫줄의 "원화" 칸 중,
+ * 윗줄에서 왼쪽으로 가장 가까운 비어있지 않은 묶음 제목이 각각 "매수가"/"현재가"인
+ * 칸으로 찾는다("매수가"는 아랫줄에도 배당률 묶음 아래 단가로 한 번 더 나오므로
+ * 아랫줄 이름만으로 찾지 않는다).
+ */
 var PORTFOLIO_STOCK_HEADERS = {
   name: '종목명',
   code: '종목코드',
   classification: '자산분류',
   currency: '통화',
   quantity: '주식수',
-  costKrw: '매수가 원화 합계',
-  marketValueKrw: '현재가 원화 합계',
+  krwSubLabel: '원화',
+  costGroupLabel: '매수가',
+  marketGroupLabel: '현재가',
 };
 
 var PORTFOLIO_BLOCK_TOTAL_LABEL = 'Total';
@@ -121,6 +131,11 @@ function getMeUserId_() {
 
 function getSpouseUserId_() {
   return getScriptProperty_('SPOUSE_USER_ID');
+}
+
+/** SPOUSE_USER_ID가 아직 없으면(로그인 기능 착수 전 등) null — 배우자 탭 동기화를 건너뛰는 데 쓴다. */
+function getSpouseUserIdOptional_() {
+  return PropertiesService.getScriptProperties().getProperty('SPOUSE_USER_ID') || null;
 }
 
 /** 열려도 되는 유일한 스프레드시트. 이 함수 외의 경로로 다른 파일을 열지 않는다. */

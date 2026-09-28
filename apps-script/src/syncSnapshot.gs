@@ -31,18 +31,22 @@ function syncSnapshot() {
     fatal = true;
   }
 
-  try {
-    accounts = accounts.concat(readSpouseStocksSheet_(spreadsheet));
-  } catch (err) {
-    logSyncError_('spouse-stocks', 'n/a', err.message);
-    fatal = true;
-  }
+  if (getSpouseUserIdOptional_()) {
+    try {
+      accounts = accounts.concat(readSpouseStocksSheet_(spreadsheet));
+    } catch (err) {
+      logSyncError_('spouse-stocks', 'n/a', err.message);
+      fatal = true;
+    }
 
-  try {
-    accounts = accounts.concat(readSpouseAssetsSheet_(spreadsheet));
-  } catch (err) {
-    logSyncError_('spouse-assets', 'n/a', err.message);
-    fatal = true;
+    try {
+      accounts = accounts.concat(readSpouseAssetsSheet_(spreadsheet));
+    } catch (err) {
+      logSyncError_('spouse-assets', 'n/a', err.message);
+      fatal = true;
+    }
+  } else {
+    logSyncInfo_('SPOUSE_USER_ID 스크립트 속성이 없어 배우자 탭 동기화를 건너뜀');
   }
 
   if (fatal) {
