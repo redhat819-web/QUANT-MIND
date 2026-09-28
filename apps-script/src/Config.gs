@@ -34,26 +34,39 @@ function getJsonScriptProperty_(key, defaultValue) {
   }
 }
 
-/** 포트폴리오 탭의 블록 반복 구간에서 A열 계좌명이 이 목록에 있으면 "자녀" 소유로 간주한다. */
+/** 포트폴리오 탭의 블록 반복 구간에서 A열 계좌명이 이 목록에 있으면 "자녀" 소유로 간주한다. 앞뒤 공백은 제거하고 비교한다. */
 function getChildAccountNames_() {
-  return getJsonScriptProperty_('CHILD_ACCOUNT_NAMES', []);
+  var names = getJsonScriptProperty_('CHILD_ACCOUNT_NAMES', []);
+  return names.map(function (name) {
+    return String(name).trim();
+  });
 }
 
 /**
  * 배우자_자산 탭에서 읽을 항목명 허용 목록(현금성 자산만). 이 목록에 없는 항목명은
- * 전부 무시한다(부동산·대출·연금 등을 Feature 001 범위에서 배제하기 위함).
+ * 전부 무시한다(부동산·대출·연금 등을 Feature 001 범위에서 배제하기 위함). 앞뒤
+ * 공백은 제거하고 비교한다.
  */
 function getSpouseCashAllowlist_() {
-  return getJsonScriptProperty_('SPOUSE_CASH_ALLOWLIST', []);
+  var items = getJsonScriptProperty_('SPOUSE_CASH_ALLOWLIST', []);
+  return items.map(function (item) {
+    return String(item).trim();
+  });
 }
 
 /**
  * Account Board(상단 계좌별 예수금 표)의 계좌명이 포트폴리오 블록 제목의 계좌명과
  * 다른 경우(예: ISA는 블록 제목이 더 김) 여기서 매핑한다. 키는 Board 계좌명, 값은
  * 블록 제목 계좌명이다. 매핑이 없거나 틀리면 동기화가 "매핑 필요" 오류로 멈춘다.
+ * 키·값 모두 앞뒤 공백은 제거하고 비교한다.
  */
 function getBoardToBlockAccountMap_() {
-  return getJsonScriptProperty_('BOARD_TO_BLOCK_ACCOUNT', {});
+  var raw = getJsonScriptProperty_('BOARD_TO_BLOCK_ACCOUNT', {});
+  var trimmed = {};
+  Object.keys(raw).forEach(function (key) {
+    trimmed[key.trim()] = String(raw[key]).trim();
+  });
+  return trimmed;
 }
 
 /**

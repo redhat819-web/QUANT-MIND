@@ -181,11 +181,9 @@ function buildPortfolioAccountPayload_(values, block) {
     }
 
     var classificationLabel = String(values[r][cols.classification] || '').trim();
-    var classification = CLASSIFICATION_MAP[classificationLabel];
+    var classification = CLASSIFICATION_MAP[classificationLabel] || null;
     if (!classification) {
-      syncError = 'UNKNOWN_CLASSIFICATION';
-      logSyncError_('portfolio-block', r + 1, syncError);
-      continue;
+      logSyncWarn_('portfolio-block', r + 1, 'UNKNOWN_CLASSIFICATION');
     }
 
     sumMarketValue += marketValue;
