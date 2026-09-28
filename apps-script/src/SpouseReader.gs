@@ -109,22 +109,23 @@ function readSpouseStocksSheet_(spreadsheet) {
 }
 
 /**
- * 허용 목록(CASH_ITEM_ALLOWLIST)에 있는 항목명만 읽는다. 탭 내용을 로그로
- * 출력하지 않는다 — 허용 목록은 Config.gs에 직접 채워 넣는다.
+ * 허용 목록(스크립트 속성 SPOUSE_CASH_ALLOWLIST)에 있는 항목명만 읽는다. 탭
+ * 내용을 로그로 출력하지 않는다 — 허용 목록은 스크립트 속성에 JSON으로 채워 넣는다.
  */
 function readSpouseAssetsSheet_(spreadsheet) {
   var sheet = getSheetByNameStrict_(spreadsheet, SHEET_SPOUSE_ASSETS);
   var values = sheet.getDataRange().getValues();
 
-  if (CASH_ITEM_ALLOWLIST.length === 0) {
-    logSyncInfo_('CASH_ITEM_ALLOWLIST가 비어 있어 배우자_자산 탭에서 읽는 항목이 없음');
+  var spouseCashAllowlist = getSpouseCashAllowlist_();
+  if (spouseCashAllowlist.length === 0) {
+    logSyncInfo_('SPOUSE_CASH_ALLOWLIST가 비어 있어 배우자_자산 탭에서 읽는 항목이 없음');
     return [];
   }
 
   var holdings = [];
   for (var r = 0; r < values.length; r++) {
     var itemName = String(values[r][0] || '').trim();
-    if (CASH_ITEM_ALLOWLIST.indexOf(itemName) === -1) {
+    if (spouseCashAllowlist.indexOf(itemName) === -1) {
       continue;
     }
     var amount = toNumberOrNull_(values[r][1]);

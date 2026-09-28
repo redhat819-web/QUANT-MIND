@@ -1,12 +1,15 @@
 /**
  * 포트폴리오 탭(본인·자녀, 블록 반복형) + 상단 Account Board(계좌별 예수금) 읽기.
  *
- * 가정(시트를 직접 볼 수 없어 사용자 설명을 그대로 코드화함 — 실제 실행 시 헤더
- * 문구가 다르면 즉시 에러로 멈추도록 설계했다. 다르면 여기서 멈추고 알려줄 것):
- * - Account Board는 첫 번째 계좌 블록 시작行보다 위에 있고, 헤더 행에 "계좌"를
- *   포함한 셀과 "예수금"을 포함한 셀이 함께 존재한다.
- * - USD 환산용 환율표는 상단 어딘가에 "환율"이라는 셀과 그 오른쪽 숫자 셀로
- *   존재한다(달러 예수금이 있을 때만 사용).
+ * 실제 시트 캡처로 확인된 구조:
+ * - 환율표: "통화"와 "환율"이 함께 있는 제목 행이 있고, 그 아래 데이터 행에서
+ *   통화 열 값이 "USD"인 행의 환율 열 값을 쓴다(제목 셀 오른쪽이 아니라 아래쪽).
+ * - Account Board: "계좌명"과 "예수금"이 같은 행에 있는 제목 행이 있고, 그
+ *   바로 아래 행에 KRW/USD 하위 열 이름이 있다. 계좌명이 빈 맨 아래 합계 행은
+ *   건너뛴다.
+ * - Board의 계좌명과 블록 제목(계좌 블록 A열 계좌명)이 일부 다를 수 있어
+ *   스크립트 속성 BOARD_TO_BLOCK_ACCOUNT(JSON)로 매핑한다. 매핑해도 블록
+ *   계좌명과 일치하지 않는 Board 행이 있으면 동기화를 멈춘다("매핑 필요").
  */
 
 function readPortfolioSheet_(spreadsheet) {
@@ -18,13 +21,18 @@ function readPortfolioSheet_(spreadsheet) {
     throw new Error('포트폴리오 탭에서 계좌 블록을 찾지 못함(시트 구조 확인 필요)');
   }
 
+  var blockAccountNames = {};
+  for (var b = 0; b < blocks.length; b++) {
+    blockAccountNames[blocks[b].accountName] = true;
+  }
+
   var accounts = [];
   for (var i = 0; i < blocks.length; i++) {
     accounts.push(buildPortfolioAccountPayload_(values, blocks[i]));
   }
 
   var boardEndRow = blocks[0].blockStartRow; // 첫 블록 시작 행 바로 위까지가 Account Board 영역
-  var cashAccounts = readAccountBoardCash_(values, boardEndRow);
+  var cashAccounts = readAccountBoardCash_(values, boardEndRow, blockAccountNames);
   accounts = accounts.concat(cashAccounts);
 
   return accounts;
@@ -96,7 +104,7 @@ function toNumberOrNull_(value) {
 function buildPortfolioAccountPayload_(values, block) {
   var cols = findHeaderColumns_(values[block.headerRow], PORTFOLIO_STOCK_HEADERS, 'portfolio-block');
 
-  var isChild = CHILD_ACCOUNT_NAMES.indexOf(block.accountName) !== -1;
+  var isChild = getChildAccountNames_().indexOf(block.accountName) !== -1;
   var ownerType = isChild ? 'child' : 'member';
   var ownerUserId = isChild ? null : getMeUserId_();
   var ownerLabel = isChild ? block.accountName : null;
@@ -185,35 +193,29 @@ function buildPortfolioAccountPayload_(values, block) {
 }
 
 /**
- * 상단 Account Board에서 계좌별 예수금(현금)을 읽는다. 헤더 행은 "계좌"를 포함한
- * 셀과 "예수금"을 포함한 셀이 같은 행에 있는 것으로 찾는다. USD 열이 있으면
- * "환율" 셀 오른쪽의 숫자로 원화 환산한다.
+ * 상단 Account Board에서 계좌별 예수금(현금)을 읽는다. 제목 행은 "계좌명"과
+ * "예수금"이 같은 행에 있는 것으로 찾고, KRW/USD 하위 열 이름은 그 바로 아래
+ * 행에서 찾는다. Board 계좌명은 스크립트 속성 BOARD_TO_BLOCK_ACCOUNT로 블록
+ * 계좌명과 맞춘 뒤 그 이름으로 payload를 만든다(같은 account 행으로 upsert되도록).
  */
-function readAccountBoardCash_(values, boardEndRow) {
+function readAccountBoardCash_(values, boardEndRow, blockAccountNames) {
+  var boardToBlockAccount = getBoardToBlockAccountMap_();
+  var childAccountNames = getChildAccountNames_();
+
   var headerRow = -1;
   var accountCol = -1;
-  var krwCol = -1;
-  var usdCol = -1;
 
   for (var r = 0; r < boardEndRow; r++) {
     var accCandidate = -1;
-    var krwCandidate = -1;
-    var usdCandidate = -1;
+    var cashCandidate = -1;
     for (var c = 0; c < values[r].length; c++) {
       var text = String(values[r][c] || '').trim();
-      if (text.indexOf('계좌') !== -1) accCandidate = c;
-      if (text.indexOf('예수금') !== -1 && text.indexOf('달러') === -1 && text.indexOf('USD') === -1) {
-        krwCandidate = c;
-      }
-      if (text.indexOf('예수금') !== -1 && (text.indexOf('달러') !== -1 || text.indexOf('USD') !== -1)) {
-        usdCandidate = c;
-      }
+      if (text.indexOf('계좌명') !== -1) accCandidate = c;
+      if (text.indexOf('예수금') !== -1) cashCandidate = c;
     }
-    if (accCandidate !== -1 && krwCandidate !== -1) {
+    if (accCandidate !== -1 && cashCandidate !== -1) {
       headerRow = r;
       accountCol = accCandidate;
-      krwCol = krwCandidate;
-      usdCol = usdCandidate;
       break;
     }
   }
@@ -222,12 +224,35 @@ function readAccountBoardCash_(values, boardEndRow) {
     throw new Error('Account Board 헤더를 찾지 못함(시트 구조 확인 필요)');
   }
 
+  var subHeaderRow = headerRow + 1;
+  var krwCol = -1;
+  var usdCol = -1;
+  if (subHeaderRow < boardEndRow) {
+    for (var sc = 0; sc < values[subHeaderRow].length; sc++) {
+      var subText = String(values[subHeaderRow][sc] || '').trim();
+      if (subText.indexOf('KRW') !== -1) krwCol = sc;
+      if (subText.indexOf('USD') !== -1) usdCol = sc;
+    }
+  }
+  if (krwCol === -1) {
+    throw new Error('Account Board KRW 하위 열을 찾지 못함(시트 구조 확인 필요)');
+  }
+
   var exchangeRate = usdCol !== -1 ? findExchangeRate_(values, boardEndRow) : null;
 
   var accounts = [];
-  for (var row = headerRow + 1; row < boardEndRow; row++) {
-    var accountName = String(values[row][accountCol] || '').trim();
-    if (accountName === '') {
+  var unmappedCount = 0;
+
+  for (var row = subHeaderRow + 1; row < boardEndRow; row++) {
+    var boardAccountName = String(values[row][accountCol] || '').trim();
+    if (boardAccountName === '') {
+      continue; // 맨 아래 합계 행 등 계좌명 없는 행은 건너뜀
+    }
+
+    var mappedName = boardToBlockAccount[boardAccountName] || boardAccountName;
+    if (!blockAccountNames[mappedName]) {
+      unmappedCount += 1;
+      logSyncError_('account-board', row + 1, 'ACCOUNT_MAPPING_REQUIRED');
       continue;
     }
 
@@ -256,15 +281,15 @@ function readAccountBoardCash_(values, boardEndRow) {
       }
     }
 
-    var isChild = CHILD_ACCOUNT_NAMES.indexOf(accountName) !== -1;
+    var isChild = childAccountNames.indexOf(mappedName) !== -1;
     var ownerType = isChild ? 'child' : 'member';
 
     if (syncError) {
       accounts.push({
-        account_name: accountName,
+        account_name: mappedName,
         owner_type: ownerType,
         owner_user_id: isChild ? null : getMeUserId_(),
-        owner_label: isChild ? accountName : null,
+        owner_label: isChild ? mappedName : null,
         source_sheet_id: getSpreadsheetId_(),
         sync_status: 'failed',
         sync_error: syncError,
@@ -274,10 +299,10 @@ function readAccountBoardCash_(values, boardEndRow) {
     }
 
     accounts.push({
-      account_name: accountName,
+      account_name: mappedName,
       owner_type: ownerType,
       owner_user_id: isChild ? null : getMeUserId_(),
-      owner_label: isChild ? accountName : null,
+      owner_label: isChild ? mappedName : null,
       source_sheet_id: getSpreadsheetId_(),
       sync_status: 'success',
       sync_error: null,
@@ -299,18 +324,48 @@ function readAccountBoardCash_(values, boardEndRow) {
     });
   }
 
+  if (unmappedCount > 0) {
+    throw new Error('Account Board 계좌명이 블록과 매핑되지 않음(스크립트 속성 BOARD_TO_BLOCK_ACCOUNT 확인 필요)');
+  }
+
   return accounts;
 }
 
+/**
+ * "통화"와 "환율"이 함께 있는 제목 행을 찾고, 그 아래 데이터 행에서 통화 열
+ * 값이 "USD"인 행의 환율 열 값을 읽는다(제목 셀 오른쪽이 아니라 아래쪽 데이터).
+ */
 function findExchangeRate_(values, boardEndRow) {
+  var headerRow = -1;
+  var currencyCol = -1;
+  var rateCol = -1;
+
   for (var r = 0; r < boardEndRow; r++) {
-    for (var c = 0; c < values[r].length - 1; c++) {
+    var currencyCandidate = -1;
+    var rateCandidate = -1;
+    for (var c = 0; c < values[r].length; c++) {
       var text = String(values[r][c] || '').trim();
-      if (text.indexOf('환율') !== -1) {
-        var rate = toNumberOrNull_(values[r][c + 1]);
-        if (rate) {
-          return rate;
-        }
+      if (text.indexOf('통화') !== -1) currencyCandidate = c;
+      if (text.indexOf('환율') !== -1) rateCandidate = c;
+    }
+    if (currencyCandidate !== -1 && rateCandidate !== -1) {
+      headerRow = r;
+      currencyCol = currencyCandidate;
+      rateCol = rateCandidate;
+      break;
+    }
+  }
+
+  if (headerRow === -1) {
+    return null;
+  }
+
+  for (var row = headerRow + 1; row < boardEndRow; row++) {
+    var currencyText = String(values[row][currencyCol] || '').trim();
+    if (currencyText === 'USD') {
+      var rate = toNumberOrNull_(values[row][rateCol]);
+      if (rate) {
+        return rate;
       }
     }
   }

@@ -69,11 +69,17 @@ Phase 8을 먼저 끝내고 Phase 9로 넘어가는 순서가 자연스럽다.
 | `ME_USER_ID` / `SPOUSE_USER_ID` | 포트폴리오/배우자 탭 데이터를 어느 Supabase auth 사용자(uuid)에게 귀속시킬지 — **이메일이 아닌 UUID**로 관리(코드에 이메일 없음) | Apps Script 스크립트 속성 | 완료. 아직 실제 auth 사용자가 없다면(로그인 기능 미착수) 이 값은 나중에 채워야 실제 동기화가 성공한다 |
 | (선택) CI용 테스트 Supabase URL/anon key/service role key | T058(RLS 통합 테스트)·T064(agenda-history 통합 테스트)를 CI에서 자동 실행하려는 경우 | **GitHub repository/organization Secrets**(예: `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SUPABASE_SERVICE_ROLE_KEY`) | 이름은 예시이며 실제 도입 시 확정. `deploy.yml`과는 별도 워크플로(테스트 전용)로 분리 권장 — 배포 워크플로는 T083에 따라 `VITE_DATA_SOURCE=mock` 고정 유지 |
 
-### 2.4 코드 상수 (Config.gs, 값은 비워둠 — 커밋된 코드에 실제 이름 없음)
+### 2.4 계좌명이 들어가는 값 (스크립트 속성, JSON — 코드/레포엔 없음)
 
-- `CHILD_ACCOUNT_NAMES`: 포트폴리오 탭에서 자녀 계좌로 인식할 계좌명 목록(빈 배열)
-- `CASH_ITEM_ALLOWLIST`: 배우자_자산 탭에서 읽을 항목명 허용 목록(빈 배열)
-- 두 목록 모두 실행 전 `apps-script/src/Config.gs`에 직접 채워야 실제 데이터가 반영된다.
+계좌명이 저장소에 남지 않도록 코드 상수가 아니라 Apps Script 스크립트 속성에
+JSON으로 저장한다. 속성이 없으면 빈 값으로 처리된다.
+
+- `CHILD_ACCOUNT_NAMES` (JSON 배열): 포트폴리오 탭에서 자녀 계좌로 인식할 계좌명
+- `BOARD_TO_BLOCK_ACCOUNT` (JSON 객체): Account Board 계좌명 → 블록 제목 계좌명 매핑
+- `SPOUSE_CASH_ALLOWLIST` (JSON 배열): 배우자_자산 탭에서 읽을 항목명 허용 목록
+- 세 값 모두 실행 전 Apps Script 프로젝트 설정 → 스크립트 속성에 채워야 실제
+  데이터가 반영된다. `BOARD_TO_BLOCK_ACCOUNT`는 매핑이 필요한데 비어 있으면
+  동기화가 "매핑 필요" 오류로 멈춘다(조용히 무시하지 않음).
 
 ### 2.3 주의사항 (헌장 원칙 IV 관련)
 
@@ -93,5 +99,6 @@ Phase 8을 먼저 끝내고 Phase 9로 넘어가는 순서가 자연스럽다.
 - Account Board(예수금)/환율표 탐지 로직은 실제 시트 구조를 보지 못한 채 세운
   가정이다 — 처음 `지금 동기화`를 실행했을 때 Stackdriver 로그에
   `Account Board 헤더를 찾지 못함` 같은 오류가 없는지 확인 필요.
-- `CHILD_ACCOUNT_NAMES`/`CASH_ITEM_ALLOWLIST`가 비어 있으면 자녀 계좌는 전부
-  "member"로, 배우자 현금성 자산은 전혀 반영되지 않는다 — 실제 값을 채워야 함.
+- `CHILD_ACCOUNT_NAMES`/`SPOUSE_CASH_ALLOWLIST` 스크립트 속성이 비어 있으면
+  자녀 계좌는 전부 "member"로, 배우자 현금성 자산은 전혀 반영되지 않는다 —
+  실제 값을 스크립트 속성에 채워야 함.

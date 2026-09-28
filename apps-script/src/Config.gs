@@ -10,21 +10,51 @@ var SHEET_SPOUSE_STOCKS = '배우자_주식현황';
 var SHEET_SPOUSE_ASSETS = '배우자_자산';
 
 /**
- * 포트폴리오 탭의 블록 반복 구간에서 A열 계좌명이 이 목록에 있으면 "자녀" 소유로
- * 간주한다. 채우는 방법: 아래 배열에 실제 자녀 계좌명을 문자열로 추가한다.
- * 예) var CHILD_ACCOUNT_NAMES = ['지민 증권계좌'];
- * 비워두면 모든 계좌가 "나"(member) 소유로 처리된다.
+ * 계좌 이름이 코드/저장소에 남지 않도록, 계좌명이 들어가는 값은 코드 상수가 아니라
+ * 스크립트 속성(PropertiesService)에 JSON으로 저장한다. 속성이 없으면 빈 값으로
+ * 처리한다 — 단, Account Board 계좌명이 포트폴리오 블록 계좌명과 매핑되지 않는 경우는
+ * (매핑이 필요한데 비어 있는 것일 수 있으므로) 빈 값으로 넘어가지 않고 동기화를
+ * "매핑 필요" 오류로 멈춘다.
+ *
+ * - CHILD_ACCOUNT_NAMES    (JSON 배열)  예) ["블록 제목 계좌명"]
+ * - BOARD_TO_BLOCK_ACCOUNT (JSON 객체)  예) {"Board 계좌명": "블록 제목 계좌명"}
+ * - SPOUSE_CASH_ALLOWLIST  (JSON 배열)  예) ["배우자_자산 탭 항목명"]
+ *
+ * Apps Script 편집기 좌측 톱니바퀴 → 프로젝트 설정 → 스크립트 속성에서 입력한다.
  */
-var CHILD_ACCOUNT_NAMES = [];
+function getJsonScriptProperty_(key, defaultValue) {
+  var raw = PropertiesService.getScriptProperties().getProperty(key);
+  if (!raw) {
+    return defaultValue;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    throw new Error('스크립트 속성이 올바른 JSON이 아님: ' + key);
+  }
+}
+
+/** 포트폴리오 탭의 블록 반복 구간에서 A열 계좌명이 이 목록에 있으면 "자녀" 소유로 간주한다. */
+function getChildAccountNames_() {
+  return getJsonScriptProperty_('CHILD_ACCOUNT_NAMES', []);
+}
 
 /**
  * 배우자_자산 탭에서 읽을 항목명 허용 목록(현금성 자산만). 이 목록에 없는 항목명은
  * 전부 무시한다(부동산·대출·연금 등을 Feature 001 범위에서 배제하기 위함).
- * 채우는 방법: 실제 항목명 문자열을 추가한다. 예)
- * var CASH_ITEM_ALLOWLIST = ['생활비 통장', '비상금 파킹통장'];
- * 이 탭의 내용을 로그로 출력하지 않는다 — 직접 시트를 열어 항목명을 확인해 채운다.
  */
-var CASH_ITEM_ALLOWLIST = [];
+function getSpouseCashAllowlist_() {
+  return getJsonScriptProperty_('SPOUSE_CASH_ALLOWLIST', []);
+}
+
+/**
+ * Account Board(상단 계좌별 예수금 표)의 계좌명이 포트폴리오 블록 제목의 계좌명과
+ * 다른 경우(예: ISA는 블록 제목이 더 김) 여기서 매핑한다. 키는 Board 계좌명, 값은
+ * 블록 제목 계좌명이다. 매핑이 없거나 틀리면 동기화가 "매핑 필요" 오류로 멈춘다.
+ */
+function getBoardToBlockAccountMap_() {
+  return getJsonScriptProperty_('BOARD_TO_BLOCK_ACCOUNT', {});
+}
 
 /** 포트폴리오 탭 종목 블록의 헤더 행에서 찾을 열 이름(셀 주소 고정 금지). */
 var PORTFOLIO_STOCK_HEADERS = {
