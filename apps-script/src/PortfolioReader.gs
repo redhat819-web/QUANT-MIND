@@ -33,9 +33,36 @@ function readPortfolioSheet_(spreadsheet) {
 
   var boardEndRow = blocks[0].blockStartRow; // 첫 블록 시작 행 바로 위까지가 Account Board 영역
   var cashAccounts = readAccountBoardCash_(values, boardEndRow, blockAccountNames);
-  accounts = accounts.concat(cashAccounts);
+  mergeBoardCashIntoBlocks_(accounts, cashAccounts);
 
   return accounts;
+}
+
+/**
+ * Board 예수금을 같은 계좌의 블록 payload에 합쳐 계좌당 payload 항목을 하나로 만든다.
+ * 같은 계좌가 두 번 오면 뒤 항목(Board, success)이 앞 항목(블록, failed)의 상태를
+ * upsert로 덮어쓰기 때문이다. 블록이 failed면 예수금도 반영하지 않고(기존 데이터
+ * 유지), 예수금이 failed면 계좌 전체를 failed로 둔다.
+ */
+function mergeBoardCashIntoBlocks_(blockAccounts, cashAccounts) {
+  var byName = {};
+  for (var i = 0; i < blockAccounts.length; i++) {
+    byName[blockAccounts[i].account_name] = blockAccounts[i];
+  }
+  for (var j = 0; j < cashAccounts.length; j++) {
+    var cash = cashAccounts[j];
+    var block = byName[cash.account_name]; // readAccountBoardCash_가 블록에 없는 계좌는 이미 걸러냄
+    if (block.sync_status !== 'success') {
+      continue;
+    }
+    if (cash.sync_status !== 'success') {
+      block.sync_status = 'failed';
+      block.sync_error = cash.sync_error;
+      block.holdings = [];
+      continue;
+    }
+    block.holdings = block.holdings.concat(cash.holdings);
+  }
 }
 
 /**
