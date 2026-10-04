@@ -376,16 +376,31 @@ Sheets 어댑터(Phase 8) 시작 가능
       `sync_status='failed'`로 `upsert_snapshot` payload에 포함(내부적으로
       `last_synced_at` 미갱신) in `apps-script/src/syncSnapshot.gs`
 
-**참고(가정 미검증)**: Account Board(예수금) 헤더 탐지("계좌"+"예수금" 텍스트
-동일 행)와 환율표 탐지("환율" 셀 우측 숫자)는 실제 시트를 열어보지 못한 채
-사용자 설명만으로 구현한 가정이다. 실제 실행 시 구조가 다르면 즉시 에러로
-멈추도록 설계했으나, 최초 실행 결과 확인 전까지는 미검증 상태.
+**실제 확인(2026-10-04, 8번째 실행 기준)**: 시트 구조 가정은 실제 시트로 확인·
+정정 완료 — Account Board(예수금) 헤더("계좌명"+"예수금" 같은 행, 아랫줄 KRW/USD),
+환율표, 포트폴리오 블록 2줄 헤더(매수가/현재가 묶음 아래 "원화"), 배우자 탭 헤더.
+동기화 결과(읽기 전용 검증): 계좌 6개(member 5, child 1) 모두 success, 종목 39개
+(블록 순서 8/6/6/5/8/6), 계좌별 현금 행은 Board 예수금 1개씩.
+실행 중 확정된 동작:
+- payload는 계좌당 1항목 — Board 예수금을 같은 계좌 블록에 합침(블록 failed면 계좌
+  failed 유지, 기존 holding 미변경).
+- 블록 안 자산분류 "현금" 행은 holding으로 저장하지 않고 Board 예수금만 사용(합계
+  검증에는 포함). 둘이 1원 넘게 다르면 `CASH_BOARD_BLOCK_DIFF` 경고.
+- 합계 검증은 원화 두 열만, 1원 이하 차이는 일치. 불일치는 열·차이 구간만 로그.
+- `upsert_snapshot`은 success 계좌에서 스냅샷에 없는 holding을 삭제(빈 스냅샷·50%
+  이상 삭제는 건너뛰고 `PRUNE_SKIPPED_*` 경고) —
+  `supabase/migrations/20261004130000_prune_sold_holdings.sql`.
+- 자산분류 열은 상품 유형(국내주식 등)이라 성장/방어로 매핑하지 않음 — 주식은
+  `unclassified`로 저장, 분류는 `mapping_rule`(종목코드 기준)로 채운다.
 - [ ] T055 Supabase 어댑터 구현 — `useAccounts`/`useHoldingDetail`/
       `useDashboardSummary`가 `personal_aggregate_view`/
       `household_aggregate_view`/`allocation_view`를 조회하도록 구현 in
       `src/features/dashboard/api/`, `src/features/holdings/api/`
 - [ ] T056 [US1] `DashboardPage`/`SyncStatusBanner`를 Supabase 어댑터에 연결,
       `as_of_synced_at`/`has_sync_failure` 반영 (FR-024)
+      **원칙(2026-10-04)**: 수동 분류는 `holding`이 아니라 `mapping_rule`
+      (household + 종목코드)에 저장한다 — 판 종목 정리로 holding이 삭제·재생성돼도
+      분류가 유지되도록. 분류 화면(FR-011 수동 변경, T057 매핑 UI 포함) 구현 시 적용.
 - [ ] T057 [US2] `HoldingsPage`를 Supabase 어댑터에 연결, `is_mapped=false`
       종목에 수동 매핑 등록 UI 추가(`mapping_rule` INSERT) (FR-015)
 - [ ] T058 [P] RLS 통합 테스트 — household 스코프 SELECT 검증, 비로그인/anon
