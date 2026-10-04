@@ -61,7 +61,8 @@ function upsertSnapshot_(payload) {
   // 이름으로 보고 함수를 찾지 못해 404(PGRST202)를 반환한다.
   var body = callSupabaseRpc_('upsert_snapshot', { payload: payload });
 
-  // 판 종목 정리를 보호 규칙으로 건너뛴 계좌는 경고로 남긴다(종류와 payload 위치만).
+  // 서버 경고(판 종목 정리·규칙 교체 보호)와 분류 규칙 점검 결과를 남긴다 — 종류,
+  // payload 위치, 종목분류 탭 행 번호만.
   var result = {};
   try {
     result = JSON.parse(body) || {};
@@ -70,6 +71,18 @@ function upsertSnapshot_(payload) {
   }
   var warnings = result.warnings || [];
   for (var i = 0; i < warnings.length; i++) {
-    logPruneWarn_(warnings[i].account_idx, warnings[i].type);
+    if (warnings[i].account_idx !== undefined) {
+      logPruneWarn_(warnings[i].account_idx, warnings[i].type);
+    } else {
+      logSyncWarn_('classification', 'n/a', warnings[i].type);
+    }
+  }
+  var conflictRows = result.rule_conflict_rows || [];
+  for (var c = 0; c < conflictRows.length; c++) {
+    logSyncWarn_('classification', conflictRows[c], 'RULE_CONFLICT');
+  }
+  var unmatchedRows = result.rules_unmatched_rows || [];
+  for (var u = 0; u < unmatchedRows.length; u++) {
+    logSyncWarn_('classification', unmatchedRows[u], 'RULE_UNMATCHED');
   }
 }

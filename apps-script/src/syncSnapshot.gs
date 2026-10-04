@@ -4,7 +4,8 @@
  *
  * 보안 규칙:
  * - 열리는 파일은 SPREADSHEET_ID 하나뿐(openAllowedSpreadsheet_).
- * - getSheets()로 탭 목록을 조회하지 않는다 — 지정된 3개 탭만 이름으로 연다.
+ * - getSheets()로 탭 목록을 조회하지 않는다 — 지정된 4개 탭(포트폴리오·배우자 2개·
+ *   종목분류)만 이름으로 연다.
  * - 기존 웹앱(Family AI v18.2)/Portfolio_Log_v2는 이 스크립트 어디서도 참조하지 않는다.
  * - 로그에는 행 번호와 오류 종류만 남긴다.
  */
@@ -60,6 +61,10 @@ function syncSnapshot() {
     synced_at: new Date().toISOString(),
     accounts: accounts,
   };
+  var classificationRules = readClassificationRules_(spreadsheet);
+  if (classificationRules) {
+    payload.classification_rules = classificationRules;
+  }
 
   try {
     upsertSnapshot_(payload);

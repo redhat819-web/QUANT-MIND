@@ -244,11 +244,8 @@ function buildPortfolioAccountPayload_(values, block) {
       hasCostKrw = true;
     }
 
-    var classificationLabel = String(values[r][cols.classification] || '').trim();
-    var classification = CLASSIFICATION_MAP[classificationLabel] || null;
-    if (!classification) {
-      logSyncWarn_('portfolio-block', r + 1, 'UNKNOWN_CLASSIFICATION');
-    }
+    // 자산분류 열은 상품 유형(국내주식 등)이라 분류에 쓰지 않는다. "현금" 행 판별에만 쓴다.
+    var isBlockCashRow = String(values[r][cols.classification] || '').trim() === '현금';
 
     sumMarketValue += marketValue;
     if (costKrw !== null) {
@@ -257,7 +254,7 @@ function buildPortfolioAccountPayload_(values, block) {
 
     // 블록 안 현금 행은 Board 예수금과 같은 돈이므로 종목으로 저장하지 않는다(A안).
     // 합계 검증(Total)에는 포함되므로 위에서 합산은 하고, Board와 비교용으로만 모은다.
-    if (classification === 'cash') {
+    if (isBlockCashRow) {
       blockCashKrw += marketValue;
       if (blockCashFirstRow === null) blockCashFirstRow = r + 1;
       continue;
@@ -270,11 +267,12 @@ function buildPortfolioAccountPayload_(values, block) {
       market_value_krw: marketValue,
       return_rate: costKrw && costKrw !== 0 ? (marketValue - costKrw) / costKrw : 0,
       cost_krw: costKrw,
-      ticker: String(values[r][cols.code] || '').trim() || null,
+      ticker: parseTickerFromName_(name),
+      sector: String(values[r][cols.code] || '').trim() || null, // "종목코드" 열엔 업종이 들어 있음(참고용)
       currency: String(values[r][cols.currency] || '').trim() || null,
       average_cost: null,
       dividend: null,
-      classification: classification,
+      classification: null, // 서버가 classification_rule로 결정
     });
   }
 

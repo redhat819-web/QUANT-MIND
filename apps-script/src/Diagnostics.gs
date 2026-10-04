@@ -107,7 +107,7 @@ function diagnoseSpouseStocks() {
       shape,
       String(values[r][0] || '').trim() === '' ? 'empty' : 'set',
       name === '' ? 'empty' : 'set',
-      name !== '' && parseSpouseTicker_(name) ? 'Y' : 'N',
+      name !== '' && parseTickerFromName_(name) ? 'Y' : 'N',
       kw.join(',')
     );
   }

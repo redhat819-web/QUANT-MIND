@@ -7,15 +7,6 @@
 var SPOUSE_TOTAL_MARKER = '합계';
 
 /**
- * 배우자 탭은 티커 열이 없고 종목명에 들어 있다. 종목명이 "영문대문자·숫자(설명)"
- * 형태(예: "ABC1(설명)")면 괄호 앞을 티커로 쓰고, 아니면 null.
- */
-function parseSpouseTicker_(name) {
-  var m = /^([A-Z0-9]+)\s*[(（].*[)）]\s*$/.exec(name);
-  return m ? m[1] : null;
-}
-
-/**
  * 헤더 행에서 라벨별 열 인덱스를 전부 모은 뒤, "마지막(두 번째) occurrence만
  * 쓰는" 열(costKrw="매입가")과 "첫 occurrence를 쓰는" 나머지 열을 구분해 반환한다.
  * 증권사(A열)는 헤더가 없어 열 인덱스 0으로 고정한다.
@@ -123,11 +114,11 @@ function readSpouseStocksSheet_(spreadsheet) {
       market_value_krw: marketValue,
       return_rate: costKrw !== 0 ? (marketValue - costKrw) / costKrw : 0,
       cost_krw: costKrw,
-      ticker: parseSpouseTicker_(name),
+      ticker: parseTickerFromName_(name), // 배우자 탭은 티커 열이 없고 종목명에 들어 있음
       currency: null,
       average_cost: null,
       dividend: null,
-      classification: null, // mapping_rule 조회로 서버에서 결정
+      classification: null, // 서버가 classification_rule로 결정
     });
   }
 

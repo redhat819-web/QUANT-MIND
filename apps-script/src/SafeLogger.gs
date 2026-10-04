@@ -69,7 +69,7 @@ function logPruneWarn_(accountIdx, type) {
  * 동기화를 막지 않는 경고. 예: 자산분류 매핑에 없는 종목 → "미분류"로 저장하고 계속 진행.
  * @param {string} context 어느 단계에서 난 경고인지
  * @param {number|string} [rowNumber] 1-indexed 행 번호. 없으면 'n/a'
- * @param {string} warnType 경고 종류 코드(예: 'UNKNOWN_CLASSIFICATION')
+ * @param {string} warnType 경고 종류 코드(예: 'UNKNOWN_CLASSIFICATION_LABEL')
  */
 function logSyncWarn_(context, rowNumber, warnType) {
   Logger.log(

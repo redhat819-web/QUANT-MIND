@@ -8,6 +8,7 @@
 var SHEET_PORTFOLIO = '포트폴리오';
 var SHEET_SPOUSE_STOCKS = '배우자_주식현황';
 var SHEET_SPOUSE_ASSETS = '배우자_자산';
+var SHEET_CLASSIFICATION = '종목분류';
 
 /**
  * 계좌 이름이 코드/저장소에 남지 않도록, 계좌명이 들어가는 값은 코드 상수가 아니라
@@ -105,12 +106,25 @@ var SPOUSE_STOCK_HEADERS = {
   costKrw: '매입가',
 };
 
-/** 포트폴리오 탭 자산분류 한글 표기 → DB classification enum 매핑. */
+/**
+ * "종목분류" 탭 C열 한글 표기 → DB classification enum 매핑. (포트폴리오 탭
+ * 자산분류 열은 상품 유형이라 분류에 쓰지 않는다 — 블록 안 현금 행 판별에만 씀.)
+ */
 var CLASSIFICATION_MAP = {
   성장: 'growth',
   방어: 'defensive',
   현금: 'cash',
 };
+
+/**
+ * 종목명에서 티커를 꺼낸다(본인·배우자 공통). "ABC1(설명)"이면 괄호 앞, 종목명 전체가
+ * 공백 없는 영문대문자·숫자면 그 자체, 그 외(한글·공백 포함 등)는 null.
+ * DB의 security_key_of()와 같은 정규식이다 — 바꿀 때 둘을 같이 바꿀 것.
+ */
+function parseTickerFromName_(name) {
+  var m = /^([A-Z0-9]+)\s*(?:[(（].*[)）])?$/.exec(String(name || '').trim());
+  return m ? m[1] : null;
+}
 
 function getScriptProperty_(key) {
   var value = PropertiesService.getScriptProperties().getProperty(key);
