@@ -55,6 +55,12 @@ function mergeBoardCashIntoBlocks_(blockAccounts, cashAccounts) {
     if (block.sync_status !== 'success') {
       continue;
     }
+    if (cash.sync_status === 'success' && block._blockCashKrw !== null && block._blockCashKrw !== undefined) {
+      var diffBucket = checkBlockSum_(cash.holdings[0].market_value_krw, block._blockCashKrw, block._blockCashRow);
+      if (diffBucket) {
+        logCashDiffWarn_(block._blockCashRow, diffBucket);
+      }
+    }
     if (cash.sync_status !== 'success') {
       block.sync_status = 'failed';
       block.sync_error = cash.sync_error;
@@ -62,6 +68,10 @@ function mergeBoardCashIntoBlocks_(blockAccounts, cashAccounts) {
       continue;
     }
     block.holdings = block.holdings.concat(cash.holdings);
+  }
+  for (var k = 0; k < blockAccounts.length; k++) {
+    delete blockAccounts[k]._blockCashKrw;
+    delete blockAccounts[k]._blockCashRow;
   }
 }
 
@@ -213,6 +223,8 @@ function buildPortfolioAccountPayload_(values, block) {
   var sumCostKrw = 0;
   var hasCostKrw = false;
   var syncError = null;
+  var blockCashKrw = 0;
+  var blockCashFirstRow = null;
 
   for (var r = block.firstStockRow; r < block.totalRow; r++) {
     var name = String(values[r][cols.name] || '').trim();
@@ -241,6 +253,14 @@ function buildPortfolioAccountPayload_(values, block) {
     sumMarketValue += marketValue;
     if (costKrw !== null) {
       sumCostKrw += costKrw;
+    }
+
+    // 블록 안 현금 행은 Board 예수금과 같은 돈이므로 종목으로 저장하지 않는다(A안).
+    // 합계 검증(Total)에는 포함되므로 위에서 합산은 하고, Board와 비교용으로만 모은다.
+    if (classification === 'cash') {
+      blockCashKrw += marketValue;
+      if (blockCashFirstRow === null) blockCashFirstRow = r + 1;
+      continue;
     }
 
     holdings.push({
@@ -296,6 +316,9 @@ function buildPortfolioAccountPayload_(values, block) {
     sync_status: 'success',
     sync_error: null,
     holdings: holdings,
+    // payload 전송 전 mergeBoardCashIntoBlocks_가 지우는 내부 필드(Board 예수금 비교용)
+    _blockCashKrw: blockCashFirstRow === null ? null : blockCashKrw,
+    _blockCashRow: blockCashFirstRow,
   };
 }
 

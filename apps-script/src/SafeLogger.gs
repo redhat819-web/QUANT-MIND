@@ -46,6 +46,24 @@ function logSupabaseError_(functionName, status, code, message) {
 }
 
 /**
+ * 블록 안 현금 행 합계와 Board 예수금이 1원 넘게 다름(동기화는 Board 값으로 계속).
+ * @param {number|string} rowNumber 블록 안 첫 현금 행 1-indexed 번호
+ * @param {string} bucket 'GT_1KRW_LT_1PCT' | 'GE_1PCT' (1%는 Board 예수금 기준)
+ */
+function logCashDiffWarn_(rowNumber, bucket) {
+  Logger.log('[SYNC_WARN] context=portfolio-block row=%s type=CASH_BOARD_BLOCK_DIFF diff=%s', rowNumber, bucket);
+}
+
+/**
+ * upsert_snapshot이 판 종목 삭제를 건너뛴 계좌. account_idx는 payload accounts 배열
+ * 위치(1부터)로, 포트폴리오 계좌는 시트 블록 순서와 같다(진단의 block 번호).
+ * @param {string} type 'PRUNE_SKIPPED_LARGE' | 'PRUNE_SKIPPED_EMPTY'
+ */
+function logPruneWarn_(accountIdx, type) {
+  Logger.log('[SYNC_WARN] context=prune account_idx=%s type=%s', accountIdx, type);
+}
+
+/**
  * 동기화를 막지 않는 경고. 예: 자산분류 매핑에 없는 종목 → "미분류"로 저장하고 계속 진행.
  * @param {string} context 어느 단계에서 난 경고인지
  * @param {number|string} [rowNumber] 1-indexed 행 번호. 없으면 'n/a'
