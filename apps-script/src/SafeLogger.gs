@@ -27,10 +27,12 @@ function logSyncError_(context, rowNumber, errorType) {
  * @param {string} column 'COST_KRW'(매입 원화) | 'MARKET_KRW'(평가 원화)
  * @param {string} bucket 'GT_1KRW_LT_1PCT'(1원 초과 1% 미만) | 'GE_1PCT'(1% 이상) |
  *   'TOTAL_MISSING'(합계 칸이 비어 있음). 1원 이하 차이는 일치로 보므로 로그되지 않는다.
+ * @param {string} [context] 기본값 'portfolio-block'(배우자 탭은 'spouse-stocks')
  */
-function logSyncSumMismatch_(rowNumber, column, bucket) {
+function logSyncSumMismatch_(rowNumber, column, bucket, context) {
   Logger.log(
-    '[SYNC_ERROR] context=portfolio-block row=%s type=BLOCK_SUM_MISMATCH column=%s diff=%s',
+    '[SYNC_ERROR] context=%s row=%s type=BLOCK_SUM_MISMATCH column=%s diff=%s',
+    context || 'portfolio-block',
     rowNumber,
     column,
     bucket

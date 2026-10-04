@@ -7,6 +7,15 @@
 var SPOUSE_TOTAL_MARKER = '합계';
 
 /**
+ * 배우자 탭은 티커 열이 없고 종목명에 들어 있다. 종목명이 "영문대문자·숫자(설명)"
+ * 형태(예: "ABC1(설명)")면 괄호 앞을 티커로 쓰고, 아니면 null.
+ */
+function parseSpouseTicker_(name) {
+  var m = /^([A-Z0-9]+)\s*[(（].*[)）]\s*$/.exec(name);
+  return m ? m[1] : null;
+}
+
+/**
  * 헤더 행에서 라벨별 열 인덱스를 전부 모은 뒤, "마지막(두 번째) occurrence만
  * 쓰는" 열(costKrw="매입가")과 "첫 occurrence를 쓰는" 나머지 열을 구분해 반환한다.
  * 증권사(A열)는 헤더가 없어 열 인덱스 0으로 고정한다.
@@ -46,16 +55,34 @@ function readSpouseStocksSheet_(spreadsheet) {
   var byBroker = {}; // 증권사 -> holdings[]
   var brokerOrder = [];
   var sumMarketValue = 0;
-  var totalRowValue = null;
+  var totalRowCell = null;
+  var totalRowNumber = null;
   var hasFatalError = false;
+  var seenStockRow = false;
+  var duplicateBrokers = {}; // 같은 증권사에 같은 종목명이 두 번 → 그 증권사 계좌만 failed
 
   for (var r = 1; r < values.length; r++) {
     var broker = String(values[r][cols.broker] || '').trim();
     var name = String(values[r][cols.name] || '').trim();
 
     if (broker.indexOf(SPOUSE_TOTAL_MARKER) !== -1 || name.indexOf(SPOUSE_TOTAL_MARKER) !== -1) {
-      totalRowValue = toNumberOrNull_(values[r][cols.marketValueKrw]);
+      totalRowCell = values[r][cols.marketValueKrw];
+      totalRowNumber = r + 1;
       continue;
+    }
+
+    // 실제 탭의 합계 행은 "합계" 라벨이 없다: 종목 행 다음, A열(증권사)이 비고
+    // 자산현황·매입가(원화)가 모두 숫자인 첫 행(종목명 칸엔 날짜). 그 아래 요약 행
+    // ("해외주식", "환율" 등)과 메모 블록은 합계·종목으로 읽지 않도록 여기서 멈춘다.
+    if (
+      broker === '' &&
+      seenStockRow &&
+      toNumberOrNull_(values[r][cols.marketValueKrw]) !== null &&
+      toNumberOrNull_(values[r][cols.costKrw]) !== null
+    ) {
+      totalRowCell = values[r][cols.marketValueKrw];
+      totalRowNumber = r + 1;
+      break;
     }
 
     if (broker === '' || name === '') {
@@ -70,12 +97,25 @@ function readSpouseStocksSheet_(spreadsheet) {
       continue; // 보유수량·자산현황·매입가(원화)가 숫자가 아니면 종목으로 인정하지 않음
     }
 
+    seenStockRow = true;
     if (!byBroker[broker]) {
       byBroker[broker] = [];
       brokerOrder.push(broker);
     }
 
     sumMarketValue += marketValue;
+
+    // 같은 종목이 다른 증권사에 있으면 계좌별로 따로 저장된다. 같은 증권사 안에서
+    // 중복되면 (account_id, raw_label) upsert로 한 행이 다른 행을 덮어쓰므로 막는다.
+    var isDuplicate = byBroker[broker].some(function (h) {
+      return h.raw_label === name;
+    });
+    if (isDuplicate) {
+      logSyncError_('spouse-stocks', r + 1, 'DUPLICATE_HOLDING');
+      duplicateBrokers[broker] = true;
+      continue;
+    }
+
     byBroker[broker].push({
       raw_label: name,
       display_name: name,
@@ -83,7 +123,7 @@ function readSpouseStocksSheet_(spreadsheet) {
       market_value_krw: marketValue,
       return_rate: costKrw !== 0 ? (marketValue - costKrw) / costKrw : 0,
       cost_krw: costKrw,
-      ticker: null,
+      ticker: parseSpouseTicker_(name),
       currency: null,
       average_cost: null,
       dividend: null,
@@ -91,15 +131,18 @@ function readSpouseStocksSheet_(spreadsheet) {
     });
   }
 
-  if (totalRowValue !== null && Math.abs(totalRowValue - sumMarketValue) > 0.5) {
-    logSyncError_('spouse-stocks', 'n/a', 'BLOCK_SUM_MISMATCH');
+  // 합계 검증: 종목 행 자산현황 합 = 합계 행 자산현황(1원 이하 차이는 일치).
+  // 합계 행이 없으면 검증할 수 없으므로 불일치(TOTAL_MISSING)로 본다.
+  var sumMismatch = totalRowNumber === null ? 'TOTAL_MISSING' : checkBlockSum_(totalRowCell, sumMarketValue, totalRowNumber);
+  if (sumMismatch) {
+    logSyncSumMismatch_(totalRowNumber === null ? 'n/a' : totalRowNumber, 'MARKET_KRW', sumMismatch, 'spouse-stocks');
     hasFatalError = true;
   }
 
   var accounts = [];
   for (var i = 0; i < brokerOrder.length; i++) {
     var brokerName = brokerOrder[i];
-    if (hasFatalError) {
+    if (hasFatalError || duplicateBrokers[brokerName]) {
       accounts.push({
         account_name: brokerName,
         owner_type: 'member',
@@ -107,7 +150,7 @@ function readSpouseStocksSheet_(spreadsheet) {
         owner_label: null,
         source_sheet_id: getSpreadsheetId_(),
         sync_status: 'failed',
-        sync_error: 'BLOCK_SUM_MISMATCH',
+        sync_error: hasFatalError ? 'BLOCK_SUM_MISMATCH' : 'DUPLICATE_HOLDING',
         holdings: [],
       });
     } else {
