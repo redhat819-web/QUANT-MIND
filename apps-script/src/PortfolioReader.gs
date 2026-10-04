@@ -148,6 +148,31 @@ function toNumberOrNull_(value) {
   return isNaN(n) ? null : n;
 }
 
+/** Google Sheets 오류값(#N/A, #REF!, #VALUE!, #DIV/0!, #NUM!, #NAME?, #NULL!, #ERROR!) 여부. */
+function isSheetErrorValue_(value) {
+  return typeof value === 'string' && /^#(N\/A|REF!|VALUE!|DIV\/0!|NUM!|NAME\?|NULL!|ERROR!)/.test(value);
+}
+
+/**
+ * 블록 합계 칸과 행 합을 비교해 불일치 구간 코드를 돌려준다(일치면 null).
+ * 반올림 오차를 고려해 1원 이하 차이는 일치로 본다. 1%는 합계 칸 값 기준.
+ */
+function checkBlockSum_(totalCell, rowSum, rowNumber) {
+  if (isSheetErrorValue_(totalCell)) {
+    logSyncWarn_('portfolio-block', rowNumber, 'TOTAL_ERROR_VALUE_SKIPPED');
+    return null;
+  }
+  var total = toNumberOrNull_(totalCell);
+  if (total === null) {
+    return 'TOTAL_MISSING';
+  }
+  var diff = Math.abs(total - rowSum);
+  if (diff <= 1) {
+    return null;
+  }
+  return diff < Math.abs(total) * 0.01 ? 'GT_1KRW_LT_1PCT' : 'GE_1PCT';
+}
+
 function buildPortfolioAccountPayload_(values, block) {
   var cols = findPortfolioBlockColumns_(values, block);
 
@@ -206,16 +231,20 @@ function buildPortfolioAccountPayload_(values, block) {
     });
   }
 
-  var totalMarketValue = toNumberOrNull_(values[block.totalRow][cols.marketValueKrw]);
-  if (syncError === null && (totalMarketValue === null || Math.abs(totalMarketValue - sumMarketValue) > 0.5)) {
-    syncError = 'BLOCK_SUM_MISMATCH';
-    logSyncError_('portfolio-block', block.totalRow + 1, syncError);
+  // 합계 검증은 원화 두 열(평가 원화·매입 원화)만 한다. 외화 열은 비교하지 않는다.
+  // 행의 오류값 셀은 위 루프에서 이미 합계에서 빠지며, 합계 칸 자체가 오류값이면
+  // 그 열은 비교를 건너뛴다.
+  var totalRowNumber = block.totalRow + 1;
+  var marketMismatch = checkBlockSum_(values[block.totalRow][cols.marketValueKrw], sumMarketValue, totalRowNumber);
+  if (marketMismatch) {
+    logSyncSumMismatch_(totalRowNumber, 'MARKET_KRW', marketMismatch);
   }
-
-  var totalCostKrw = toNumberOrNull_(values[block.totalRow][cols.costKrw]);
-  if (syncError === null && hasCostKrw && (totalCostKrw === null || Math.abs(totalCostKrw - sumCostKrw) > 0.5)) {
+  var costMismatch = hasCostKrw ? checkBlockSum_(values[block.totalRow][cols.costKrw], sumCostKrw, totalRowNumber) : null;
+  if (costMismatch) {
+    logSyncSumMismatch_(totalRowNumber, 'COST_KRW', costMismatch);
+  }
+  if (syncError === null && (marketMismatch || costMismatch)) {
     syncError = 'BLOCK_SUM_MISMATCH';
-    logSyncError_('portfolio-block', block.totalRow + 1, syncError);
   }
 
   if (syncError) {

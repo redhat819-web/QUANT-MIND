@@ -20,10 +20,31 @@ function callSupabaseRpc_(functionName, payload) {
 
   var status = response.getResponseCode();
   if (status < 200 || status >= 300) {
-    // 응답 본문은 로그로 남기지 않는다(레코드/오류 상세가 섞여 있을 수 있음).
-    throw new Error('Supabase RPC(' + functionName + ') 응답 코드 ' + status);
+    // 응답 본문 전체(details/hint 등)는 로그로 남기지 않는다 — code·message만 남긴다.
+    var error = parseSupabaseError_(response.getContentText());
+    logSupabaseError_(functionName, status, error.code, error.message);
+    throw new Error('Supabase RPC(' + functionName + ') 응답 코드 ' + status + ' code=' + error.code);
   }
   return response.getContentText();
+}
+
+/**
+ * PostgREST 오류 본문에서 code·message만 꺼낸다. Postgres 오류 메시지는 입력값을
+ * 따옴표로 감싸 포함할 수 있으므로(예: invalid input syntax for type uuid: "...")
+ * 따옴표 안 내용은 가린다.
+ */
+function parseSupabaseError_(body) {
+  var parsed = {};
+  try {
+    parsed = JSON.parse(body) || {};
+  } catch (err) {
+    // JSON이 아니면 code·message 없음으로 처리
+  }
+  var message = String(parsed.message || 'n/a')
+    .replace(/"[^"]*"/g, '"?"')
+    .replace(/'[^']*'/g, "'?'")
+    .slice(0, 300);
+  return { code: String(parsed.code || 'n/a'), message: message };
 }
 
 function upsertSyncStatus_(accountId, status, errorMessage) {
@@ -35,5 +56,8 @@ function upsertSyncStatus_(accountId, status, errorMessage) {
 }
 
 function upsertSnapshot_(payload) {
-  callSupabaseRpc_('upsert_snapshot', payload);
+  // 함수 시그니처가 upsert_snapshot(payload jsonb)이므로 본문을 인자 이름으로 감싼다.
+  // 감싸지 않으면 PostgREST가 최상위 키(household_id/synced_at/accounts)를 인자
+  // 이름으로 보고 함수를 찾지 못해 404(PGRST202)를 반환한다.
+  callSupabaseRpc_('upsert_snapshot', { payload: payload });
 }

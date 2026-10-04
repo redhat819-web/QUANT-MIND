@@ -22,6 +22,30 @@ function logSyncError_(context, rowNumber, errorType) {
 }
 
 /**
+ * 블록 합계 불일치. 금액은 남기지 않고 어느 열인지와 차이 구간만 남긴다.
+ * @param {number|string} rowNumber 합계(Total) 행 1-indexed 번호
+ * @param {string} column 'COST_KRW'(매입 원화) | 'MARKET_KRW'(평가 원화)
+ * @param {string} bucket 'GT_1KRW_LT_1PCT'(1원 초과 1% 미만) | 'GE_1PCT'(1% 이상) |
+ *   'TOTAL_MISSING'(합계 칸이 비어 있음). 1원 이하 차이는 일치로 보므로 로그되지 않는다.
+ */
+function logSyncSumMismatch_(rowNumber, column, bucket) {
+  Logger.log(
+    '[SYNC_ERROR] context=portfolio-block row=%s type=BLOCK_SUM_MISMATCH column=%s diff=%s',
+    rowNumber,
+    column,
+    bucket
+  );
+}
+
+/**
+ * Supabase RPC 실패. 요청 값은 남기지 않고 HTTP 상태·오류 code·message만 남긴다
+ * (message의 따옴표 안 값은 호출부에서 가린 상태로 전달된다).
+ */
+function logSupabaseError_(functionName, status, code, message) {
+  Logger.log('[SYNC_ERROR] context=supabase-rpc fn=%s status=%s code=%s message=%s', functionName, status, code, message);
+}
+
+/**
  * 동기화를 막지 않는 경고. 예: 자산분류 매핑에 없는 종목 → "미분류"로 저장하고 계속 진행.
  * @param {string} context 어느 단계에서 난 경고인지
  * @param {number|string} [rowNumber] 1-indexed 행 번호. 없으면 'n/a'
