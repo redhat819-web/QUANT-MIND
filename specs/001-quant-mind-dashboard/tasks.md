@@ -398,9 +398,12 @@ Sheets 어댑터(Phase 8) 시작 가능
       `src/features/dashboard/api/`, `src/features/holdings/api/`
 - [ ] T056 [US1] `DashboardPage`/`SyncStatusBanner`를 Supabase 어댑터에 연결,
       `as_of_synced_at`/`has_sync_failure` 반영 (FR-024)
-      **원칙(2026-10-04)**: 수동 분류는 `holding`이 아니라 `mapping_rule`
-      (household + 종목코드)에 저장한다 — 판 종목 정리로 holding이 삭제·재생성돼도
-      분류가 유지되도록. 분류 화면(FR-011 수동 변경, T057 매핑 UI 포함) 구현 시 적용.
+      **원칙(2026-10-04)**: 분류 정본은 한 곳만 둔다(우선순위 규칙 없음). 지금은
+      시트 "종목분류" 탭만 정본이며, 동기화가 `classification_rule`
+      (household_id + security_key)을 탭 내용으로 통째로 교체한다. 분류는 `holding`이
+      아니라 이 규칙 테이블에 있으므로 판 종목 정리로 holding이 삭제·재생성돼도
+      유지된다. 앱에 분류 화면(FR-011 수동 변경, T057 매핑 UI 포함)이 생기면 정본을
+      화면으로 옮기고 시트 탭은 더 이상 읽지 않는다.
 - [ ] T057 [US2] `HoldingsPage`를 Supabase 어댑터에 연결, `is_mapped=false`
       종목에 수동 매핑 등록 UI 추가(`mapping_rule` INSERT) (FR-015)
 - [ ] T058 [P] RLS 통합 테스트 — household 스코프 SELECT 검증, 비로그인/anon
