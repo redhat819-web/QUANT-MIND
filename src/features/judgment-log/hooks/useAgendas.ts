@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '../../../app/providers/AuthProvider'
+import { useDataSource } from '../../../app/providers/DataSourceProvider'
+import { getSupabase } from '../../../lib/supabase'
 import type { Agenda } from '../../../types/domain'
+import { createAgendaInSupabase, fetchAgendasFromSupabase } from '../api/supabaseAgendas'
 
 async function fetchAgendas(): Promise<Agenda[]> {
   const response = await fetch('/mock-api/agendas')
@@ -27,21 +31,30 @@ async function postAgenda(input: {
 }
 
 /**
- * 안건 목록 조회/작성(FR-016, FR-018) Mock 어댑터. Supabase 협업 기능(U4)
- * 단계에서 내부 구현만 agenda 테이블 CRUD로 교체하고 반환 타입은 유지한다.
+ * 안건 목록 조회/작성(FR-016, FR-018). mock 모드는 MSW, supabase 모드는 agenda
+ * 테이블을 쓴다(T061). 반환 타입은 두 모드가 같다.
  */
 export function useAgendas() {
   const queryClient = useQueryClient()
+  const dataSource = useDataSource()
+  const { user } = useAuth()
+  const userId = user?.id ?? null
 
   const query = useQuery({
-    queryKey: ['agendas'],
-    queryFn: fetchAgendas,
+    queryKey: ['agendas', dataSource, userId],
+    queryFn: () =>
+      dataSource === 'supabase'
+        ? fetchAgendasFromSupabase(getSupabase(), userId as string)
+        : fetchAgendas(),
+    enabled: dataSource === 'mock' || userId !== null,
   })
 
   const createAgenda = useMutation({
-    mutationFn: postAgenda,
+    mutationFn: (input: Parameters<typeof postAgenda>[0]) =>
+      dataSource === 'supabase' ? createAgendaInSupabase(getSupabase(), input) : postAgenda(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agendas'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
     },
   })
 

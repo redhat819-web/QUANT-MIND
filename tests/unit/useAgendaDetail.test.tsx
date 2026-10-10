@@ -2,11 +2,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { AuthProvider } from '../../src/app/providers/AuthProvider'
 import { useAgendaDetail } from '../../src/features/judgment-log/hooks/useAgendaDetail'
 
 function wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={client}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  )
 }
 
 afterEach(() => {
@@ -21,7 +26,7 @@ describe('useAgendaDetail', () => {
       vi.fn(async (_url: string, init?: { method?: string }) =>
         init?.method === 'POST'
           ? { ok: false, json: async () => ({}) }
-          : { ok: true, json: async () => ({ agenda: {}, opinions: [], agreementRecord: null }) },
+          : { ok: true, json: async () => ({ agenda: {}, opinions: [], agreementRecord: null, history: [] }) },
       ),
     )
     const { result, rerender } = renderHook(({ id }) => useAgendaDetail(id), {

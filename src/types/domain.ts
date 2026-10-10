@@ -101,11 +101,25 @@ export interface AccountSummary {
   lastSyncError: string | null
 }
 
+/** 합의완료 안건 수정 시 남는 변경 이력(FR-021) — 수정 직전 값과 사유 */
+export interface AgendaHistoryEntry {
+  id: string
+  agendaId: string
+  changedByUserId: string
+  changedByDisplayName: string
+  changedAt: string
+  reason: string
+  previousTitle: string | null
+  previousBody: string | null
+}
+
 /** 판단 로그(User Story 3) 안건 상세 화면이 한 번에 필요로 하는 뷰 모델 */
 export interface AgendaDetail {
   agenda: Agenda
   opinions: Opinion[]
   agreementRecord: AgreementRecord | null
+  /** 최신 변경이 먼저 */
+  history: AgendaHistoryEntry[]
 }
 
 /** 대시보드(User Story 1)가 한 번에 필요로 하는 뷰 모델 */

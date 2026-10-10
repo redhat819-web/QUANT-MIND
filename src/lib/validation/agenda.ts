@@ -15,10 +15,16 @@ function trimmedLength(min: number, max: number) {
 export const agendaTitleSchema = trimmedLength(1, 100)
 export const agendaBodySchema = trimmedLength(1, 2000)
 export const opinionBodySchema = trimmedLength(1, 2000)
+/** 합의완료 안건 수정 사유(FR-021). DB 함수 edit_agreed_agenda와 같은 1~500자 */
+export const changeReasonSchema = trimmedLength(1, 500)
 
 export const agendaFormSchema = z.object({
   title: agendaTitleSchema,
   body: agendaBodySchema,
+})
+
+export const agreedAgendaEditSchema = agendaFormSchema.extend({
+  reason: changeReasonSchema,
 })
 
 export const opinionFormSchema = z.object({

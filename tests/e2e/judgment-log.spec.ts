@@ -58,4 +58,27 @@ test.describe('판단 로그 - 안건 작성과 합의 기록', () => {
     await page.getByRole('button', { name: /연금저축계좌 미국 인덱스 펀드 비중 확대/ }).click() // 본인 작성(논의중)
     await expect(page.getByRole('button', { name: '수정 저장' })).toBeVisible()
   })
+
+  test('합의완료 안건은 사유와 함께 수정하고 이전 내용이 변경 이력으로 남는다(FR-021)', async ({
+    page,
+  }) => {
+    await page.goto('judgment-log')
+    await loginAsMockUser(page)
+
+    await page.getByRole('button', { name: /해외주식 양도소득세 분할 기본공제 활용 매도 건/ }).click() // 합의완료
+    await page.getByRole('button', { name: '합의 내용 수정' }).click()
+
+    await page.getByLabel('제목').fill('해외주식 양도세 기본공제 활용 매도 건(금액 정정)')
+    await page.getByRole('button', { name: '이력 남기고 수정' }).click()
+    await expect(page.getByRole('alert')).toBeVisible() // 사유가 없으면 저장하지 않는다
+
+    await page.getByLabel('수정 사유').fill('매도 금액 오기 정정')
+    await page.getByRole('button', { name: '이력 남기고 수정' }).click()
+
+    await expect(page.getByRole('heading', { name: '변경 이력' })).toBeVisible()
+    await expect(page.getByText('사유: 매도 금액 오기 정정')).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: '해외주식 양도세 기본공제 활용 매도 건(금액 정정)' }),
+    ).toBeVisible()
+  })
 })

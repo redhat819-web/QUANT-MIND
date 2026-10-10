@@ -430,6 +430,23 @@ Sheets 어댑터(Phase 8) 시작 가능
 
 **Goal**: 판단 로그(Mock)를 실제 Supabase 테이블 기반 협업 기능으로 교체
 
+**진행 메모(2026-10-10)**: 코드 작성 완료, mock 모드 단위·e2e 테스트 통과.
+마이그레이션은 원격 DB에 적용함(anon의 `edit_agreed_agenda` 호출과 agenda 조회가
+42501로 거부되는 것까지 확인). 구성원 계정으로 규칙을 검증하는 T064는 테스트
+household가 없어 실행하지 않았다(테스트 안건을 지울 수 없음) — T065 수동 점검으로
+확인한 뒤 T060~T064를 완료 처리한다.
+- 합의완료 안건 수정은 spec대로 허용(US3 Acceptance 5, FR-021). 기존 RLS는
+  `status = 'discussing'`만 수정 가능해 이력 트리거의 agreed 분기가 실행될 수
+  없었다 → `20261010120000_agenda_agreed_edit.sql`이 `agenda_update_agreed` 정책
+  (household 구성원 누구나, FR-003)을 추가한다.
+- 수정 사유는 `edit_agreed_agenda` RPC(security invoker)가 트랜잭션 로컬 설정
+  `quantmind.change_reason`에 넣고 트리거가 읽는다. 사유 없이 합의완료 안건을
+  직접 UPDATE하면 트리거가 거부한다. 기존 `request.jwt.claims.change_reason`은
+  클라이언트가 넣을 수 없어 항상 '사유 미기재'였다.
+- 클라이언트 UPDATE 가능 컬럼을 `title`/`body`로 제한(status 전환은
+  `fn_confirm_agenda`만). `opinion_count_at_confirmation`은 BEFORE INSERT
+  트리거가 센다(클라이언트 값 무시).
+- 작성자 이름은 `household_members.display_name` 임베드, 비어 있으면 나/상대방.
 - [ ] T060 `agenda`/`opinion`/`agreement_record`/`agenda_history` 스키마·RLS·
       트리거(`fn_preserve_agenda_history`, `fn_confirm_agenda`) 적용 검증(이미
       T049/T050에 포함된 정의 확인 및 필요 시 보정)
