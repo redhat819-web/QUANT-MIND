@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '../../../app/providers/AuthProvider'
+import { useDataSource } from '../../../app/providers/DataSourceProvider'
+import { getSupabase } from '../../../lib/supabase'
 import type { AccountSummary } from '../../../types/domain'
+import { fetchAccountSummariesFromSupabase } from '../api/supabaseHoldings'
 
 async function fetchAccountsSummary(): Promise<AccountSummary[]> {
   const response = await fetch('/mock-api/accounts-summary')
@@ -10,12 +14,20 @@ async function fetchAccountsSummary(): Promise<AccountSummary[]> {
 }
 
 /**
- * 계좌별 빠른 확인 모드(FR-009)용 Mock 어댑터. Sheets 어댑터(U5) 단계에서
- * 내부 구현만 personal 단위 뷰 조회로 교체하고 반환 타입은 유지한다.
+ * 계좌별 빠른 확인 모드(FR-009). mock 모드는 MSW, supabase 모드는 account +
+ * holding 금액 컬럼을 조회해 계좌별로 합산한다(T055).
  */
 export function useAccounts() {
+  const dataSource = useDataSource()
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   return useQuery({
-    queryKey: ['accounts-summary'],
-    queryFn: fetchAccountsSummary,
+    queryKey: ['accounts-summary', dataSource, userId],
+    queryFn: () =>
+      dataSource === 'supabase'
+        ? fetchAccountSummariesFromSupabase(getSupabase(), userId as string)
+        : fetchAccountsSummary(),
+    enabled: dataSource === 'mock' || userId !== null,
   })
 }

@@ -1,4 +1,4 @@
-import type { Classification } from '../../../types/domain'
+import type { Classification, HoldingClassification } from '../../../types/domain'
 
 const CLASSIFICATION_LABEL: Record<Classification, string> = {
   growth: '성장',
@@ -8,12 +8,12 @@ const CLASSIFICATION_LABEL: Record<Classification, string> = {
 
 interface ClassificationSelectProps {
   holdingId: string
-  value: Classification
+  value: HoldingClassification
   disabled?: boolean
   onChange: (holdingId: string, classification: Classification) => void
 }
 
-/** 성장/방어/현금 수동 변경(FR-011) */
+/** 성장/방어/현금 수동 변경(FR-011). 미분류 종목은 "미분류"로 표시하되 선택지로는 주지 않는다 */
 export function ClassificationSelect({
   holdingId,
   value,
@@ -31,6 +31,11 @@ export function ClassificationSelect({
           onChange(holdingId, event.target.value as Classification)
         }
       >
+        {value === 'unclassified' ? (
+          <option value="unclassified" disabled>
+            미분류
+          </option>
+        ) : null}
         {(Object.keys(CLASSIFICATION_LABEL) as Classification[]).map((classification) => (
           <option key={classification} value={classification}>
             {CLASSIFICATION_LABEL[classification]}

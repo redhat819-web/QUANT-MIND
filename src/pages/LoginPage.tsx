@@ -10,19 +10,23 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!email.trim() || !password.trim()) {
       setError('이메일 또는 비밀번호를 다시 확인해 주세요.')
       return
     }
     setError(null)
-    signIn()
+    setIsSubmitting(true)
+    const failure = await signIn(email.trim(), password)
+    setIsSubmitting(false)
+    if (failure) setError(failure)
   }
 
   return (
@@ -62,8 +66,13 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-            로그인
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: '100%' }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '로그인 중…' : '로그인'}
           </button>
         </form>
 

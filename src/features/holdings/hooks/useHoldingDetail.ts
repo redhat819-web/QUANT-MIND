@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDataSource } from '../../../app/providers/DataSourceProvider'
+import { getSupabase } from '../../../lib/supabase'
 import type { Classification, Holding } from '../../../types/domain'
+import { fetchHoldingsFromSupabase } from '../api/supabaseHoldings'
 
 async function fetchHoldings(accountId: string): Promise<Holding[]> {
   const response = await fetch(
@@ -30,17 +33,23 @@ async function patchClassification(
 }
 
 /**
- * 계좌별 종목 상세 모드(FR-010)와 분류 수동 변경(FR-011)을 담당하는 Mock
- * 어댑터. 분류 변경 시 이 훅의 캐시뿐 아니라 대시보드 비중(dashboard-summary)
+ * 계좌별 종목 상세 모드(FR-010)와 분류 수동 변경(FR-011). supabase 모드는 holding을
+ * 조회한다(T055). 실데이터의 분류 정본은 시트 "종목분류" 탭이므로(T056 메모) supabase
+ * 모드의 분류 변경은 막는다 — 앱 분류 화면이 생기면(T057) 그때 연결한다.
+ * mock 모드는 분류 변경 시 이 훅의 캐시뿐 아니라 대시보드 비중(dashboard-summary)
  * 쿼리도 무효화해, 대시보드로 돌아갔을 때 비중이 즉시 반영되게 한다
  * (US2 연동 지점: HoldingsPage → DashboardPage 비중 재계산).
  */
 export function useHoldingDetail(accountId: string | null) {
   const queryClient = useQueryClient()
+  const dataSource = useDataSource()
 
   const query = useQuery({
     queryKey: ['holdings', accountId],
-    queryFn: () => fetchHoldings(accountId as string),
+    queryFn: () =>
+      dataSource === 'supabase'
+        ? fetchHoldingsFromSupabase(getSupabase(), accountId as string)
+        : fetchHoldings(accountId as string),
     enabled: accountId !== null,
   })
 
@@ -51,7 +60,10 @@ export function useHoldingDetail(accountId: string | null) {
     }: {
       holdingId: string
       classification: Classification
-    }) => patchClassification(holdingId, classification),
+    }) =>
+      dataSource === 'supabase'
+        ? Promise.reject(new Error('분류는 시트의 "종목분류" 탭에서 변경합니다.'))
+        : patchClassification(holdingId, classification),
     onSuccess: (updated) => {
       queryClient.setQueryData<Holding[]>(['holdings', accountId], (old) =>
         old?.map((h) => (h.id === updated.id ? updated : h)) ?? old,

@@ -4,7 +4,7 @@ import { mockHoldings } from './fixtures/holdings'
 import type {
   AccountSummary,
   AllocationWeight,
-  Classification,
+  HoldingClassification,
   DashboardSummary,
   PersonalAggregate,
 } from '../types/domain'
@@ -49,7 +49,7 @@ function computePersonalAggregate(ownerUserId: string): PersonalAggregate {
 }
 
 function computeAllocation(): AllocationWeight[] {
-  const totals = new Map<Classification, number>()
+  const totals = new Map<HoldingClassification, number>()
   let grandTotal = 0
 
   for (const holding of mockHoldings) {
@@ -60,7 +60,7 @@ function computeAllocation(): AllocationWeight[] {
     grandTotal += holding.marketValueKrw
   }
 
-  const classifications: Classification[] = ['growth', 'defensive', 'cash']
+  const classifications: HoldingClassification[] = ['growth', 'defensive', 'cash']
   return classifications.map((classification) => {
     const marketValueKrw = totals.get(classification) ?? 0
     return {
