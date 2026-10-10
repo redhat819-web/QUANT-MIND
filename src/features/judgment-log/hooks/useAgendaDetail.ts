@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import type { AgendaDetail, AgreementRecord, Opinion } from '../../../types/domain'
 
 async function fetchAgendaDetail(agendaId: string): Promise<AgendaDetail> {
@@ -95,6 +96,16 @@ export function useAgendaDetail(agendaId: string | null) {
       postAgreement(agendaId as string, input),
     onSuccess: invalidate,
   })
+
+  // 저장 실패 상태는 선택한 안건에만 속한다 — 안건이 바뀌면 지운다
+  const { reset: resetUpdate } = updateAgenda
+  const { reset: resetOpinion } = addOpinion
+  const { reset: resetConfirm } = confirmAgreement
+  useEffect(() => {
+    resetUpdate()
+    resetOpinion()
+    resetConfirm()
+  }, [agendaId, resetUpdate, resetOpinion, resetConfirm])
 
   return { ...query, updateAgenda, addOpinion, confirmAgreement }
 }

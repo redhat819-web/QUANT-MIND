@@ -12,6 +12,11 @@ import { OpinionThread } from '../features/judgment-log/components/OpinionThread
 import { useAgendaDetail } from '../features/judgment-log/hooks/useAgendaDetail'
 import { useAgendas } from '../features/judgment-log/hooks/useAgendas'
 
+/** 저장 실패 사유. 성공 전에는 폼을 닫거나 비우지 않으므로 같은 버튼으로 다시 시도한다 */
+function failureMessage(mutation: { isError?: boolean; error?: Error | null }) {
+  return mutation.isError ? (mutation.error?.message ?? '저장에 실패했습니다.') : null
+}
+
 /**
  * User Story 3 - 투자 안건 작성과 합의 기록(FR-016~FR-020, FR-022, FR-023).
  * 안건 작성 → 상대 운영자 의견 → 합의 확정(의견 0건도 허용) → 확정 목록
@@ -57,15 +62,23 @@ export function JudgmentLogPage() {
           <AgendaForm
             mode="create"
             disabled={agendasQuery.createAgenda.isPending}
-            onSubmit={({ title, body }) => {
+            submitError={failureMessage(agendasQuery.createAgenda)}
+            onSubmit={({ title, body }, onSaved) => {
               if (!user) return
-              agendasQuery.createAgenda.mutate({
-                title,
-                body,
-                authorUserId: user.id,
-                authorDisplayName: user.displayName,
-              })
-              setIsComposing(false)
+              agendasQuery.createAgenda.mutate(
+                {
+                  title,
+                  body,
+                  authorUserId: user.id,
+                  authorDisplayName: user.displayName,
+                },
+                {
+                  onSuccess: () => {
+                    onSaved()
+                    setIsComposing(false)
+                  },
+                },
+              )
             }}
           />
         </section>
@@ -92,7 +105,8 @@ export function JudgmentLogPage() {
           ) : detailQuery.isError || !detailQuery.data ? (
             <ErrorState onRetry={() => detailQuery.refetch()} />
           ) : (
-            <div className="agenda-detail-panel">
+            // 안건이 바뀌면 패널을 새로 만들어 이전 안건의 수정 폼·의견 입력이 따라오지 않게 한다
+            <div key={selectedAgendaId} className="agenda-detail-panel">
               <div className="agenda-detail-panel__head">
                 <div>
                   {detailQuery.data.agenda.status === 'discussing' ? (
@@ -114,6 +128,7 @@ export function JudgmentLogPage() {
                   initialTitle={detailQuery.data.agenda.title}
                   initialBody={detailQuery.data.agenda.body}
                   disabled={detailQuery.updateAgenda.isPending}
+                  submitError={failureMessage(detailQuery.updateAgenda)}
                   onSubmit={({ title, body }) => {
                     if (!user) return
                     detailQuery.updateAgenda.mutate({
@@ -132,13 +147,17 @@ export function JudgmentLogPage() {
                 <OpinionThread
                   opinions={detailQuery.data.opinions}
                   disabled={detailQuery.addOpinion.isPending}
-                  onSubmit={(body) => {
+                  submitError={failureMessage(detailQuery.addOpinion)}
+                  onSubmit={(body, onSaved) => {
                     if (!user) return
-                    detailQuery.addOpinion.mutate({
-                      body,
-                      authorUserId: user.id,
-                      authorDisplayName: user.displayName,
-                    })
+                    detailQuery.addOpinion.mutate(
+                      {
+                        body,
+                        authorUserId: user.id,
+                        authorDisplayName: user.displayName,
+                      },
+                      { onSuccess: onSaved },
+                    )
                   }}
                 />
               </div>
@@ -159,6 +178,11 @@ export function JudgmentLogPage() {
                   }}
                 />
               </div>
+              {failureMessage(detailQuery.confirmAgreement) ? (
+                <p role="alert" className="state-error">
+                  {failureMessage(detailQuery.confirmAgreement)}
+                </p>
+              ) : null}
 
               {detailQuery.data.agreementRecord ? (
                 <p className="agreement-record-note">
