@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { JudgmentLogPage } from '../../src/pages/JudgmentLogPage'
 import * as useAgendasModule from '../../src/features/judgment-log/hooks/useAgendas'
@@ -188,11 +188,175 @@ describe('JudgmentLogPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '의견 등록' }))
 
     await waitFor(() => {
-      expect(addOpinionMutate).toHaveBeenCalledWith({
-        body: '좋은 생각이야',
-        authorUserId: 'user-me',
-        authorDisplayName: '나',
-      })
+      expect(addOpinionMutate).toHaveBeenCalledWith(
+        {
+          body: '좋은 생각이야',
+          authorUserId: 'user-me',
+          authorDisplayName: '나',
+        },
+        expect.anything(),
+      )
     })
+  })
+
+  it('안건 저장이 실패하면 폼을 닫지 않고 입력과 실패 사유를 남긴다', () => {
+    mockUseAuth()
+    const mutate = vi.fn() // onSuccess를 부르지 않음 = 저장 실패
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [mockAgenda()],
+      refetch: vi.fn(),
+      createAgenda: {
+        mutate,
+        isPending: false,
+        isError: true,
+        error: new Error('안건 작성에 실패했습니다.'),
+      } as never,
+    })
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: undefined,
+      updateAgenda: { mutate: vi.fn(), isPending: false } as never,
+      addOpinion: { mutate: vi.fn(), isPending: false } as never,
+      confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
+    })
+    render(<JudgmentLogPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '안건 작성' }))
+    fireEvent.change(screen.getByLabelText('제목'), { target: { value: '리밸런싱' } })
+    fireEvent.change(screen.getByLabelText('내용'), { target: { value: '현금 비중 조정' } })
+    const form = screen.getByLabelText('제목').closest('form')!
+    fireEvent.click(within(form).getByRole('button', { name: '안건 작성' }))
+
+    expect(mutate).toHaveBeenCalled()
+    expect(screen.getByLabelText('제목')).toHaveValue('리밸런싱')
+    expect(screen.getByRole('alert')).toHaveTextContent('안건 작성에 실패했습니다.')
+  })
+
+  it('안건 저장이 성공해야 작성 폼을 닫는다', () => {
+    mockUseAuth()
+    const mutate = vi.fn((_input, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [mockAgenda()],
+      refetch: vi.fn(),
+      createAgenda: { mutate, isPending: false } as never,
+    })
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: undefined,
+      updateAgenda: { mutate: vi.fn(), isPending: false } as never,
+      addOpinion: { mutate: vi.fn(), isPending: false } as never,
+      confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
+    })
+    render(<JudgmentLogPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '안건 작성' }))
+    fireEvent.change(screen.getByLabelText('제목'), { target: { value: '리밸런싱' } })
+    fireEvent.change(screen.getByLabelText('내용'), { target: { value: '현금 비중 조정' } })
+    const form = screen.getByLabelText('제목').closest('form')!
+    fireEvent.click(within(form).getByRole('button', { name: '안건 작성' }))
+
+    expect(screen.queryByLabelText('제목')).not.toBeInTheDocument()
+  })
+
+  it('의견 입력은 저장 성공 후에만 비운다', () => {
+    mockUseAuth()
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [mockAgenda()],
+      refetch: vi.fn(),
+      createAgenda: { mutate: vi.fn(), isPending: false } as never,
+    })
+    let saved: (() => void) | undefined
+    const addOpinionMutate = vi.fn((_input, options?: { onSuccess?: () => void }) => {
+      saved = options?.onSuccess
+    })
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: mockDetail(),
+      updateAgenda: { mutate: vi.fn(), isPending: false } as never,
+      addOpinion: { mutate: addOpinionMutate, isPending: false } as never,
+      confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
+    })
+    render(<JudgmentLogPage />)
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
+
+    const textarea = screen.getByLabelText('의견 작성')
+    fireEvent.change(textarea, { target: { value: '좋은 생각이야' } })
+    fireEvent.click(screen.getByRole('button', { name: '의견 등록' }))
+    expect(textarea).toHaveValue('좋은 생각이야')
+
+    act(() => saved?.())
+    expect(textarea).toHaveValue('')
+  })
+
+  it('합의 확정이 실패하면 실패 사유를 보여주고 버튼은 다시 누를 수 있다', () => {
+    mockUseAuth()
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [mockAgenda()],
+      refetch: vi.fn(),
+      createAgenda: { mutate: vi.fn(), isPending: false } as never,
+    })
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: mockDetail(),
+      updateAgenda: { mutate: vi.fn(), isPending: false } as never,
+      addOpinion: { mutate: vi.fn(), isPending: false } as never,
+      confirmAgreement: {
+        mutate: vi.fn(),
+        isPending: false,
+        isError: true,
+        error: new Error('합의 확정에 실패했습니다.'),
+      } as never,
+    })
+    render(<JudgmentLogPage />)
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('합의 확정에 실패했습니다.')
+    expect(screen.getByRole('button', { name: '합의 확정' })).toBeEnabled()
+  })
+
+  it('다른 안건을 선택하면 이전 안건의 수정 폼 값과 의견 입력이 따라오지 않는다', () => {
+    mockUseAuth()
+    const first = mockAgenda({ id: 'agenda-1', title: '첫째 안건', body: '첫째 내용' })
+    const second = mockAgenda({ id: 'agenda-2', title: '둘째 안건', body: '둘째 내용' })
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [first, second],
+      refetch: vi.fn(),
+      createAgenda: { mutate: vi.fn(), isPending: false } as never,
+    })
+    // 캐시된 안건처럼 로딩 없이 바로 데이터가 바뀌는 경우
+    vi.spyOn(useAgendaDetailModule, 'useAgendaDetail').mockImplementation(
+      (agendaId) =>
+        ({
+          isLoading: false,
+          isError: false,
+          data: agendaId ? mockDetail({ agenda: agendaId === 'agenda-1' ? first : second }) : undefined,
+          updateAgenda: { mutate: vi.fn(), isPending: false },
+          addOpinion: { mutate: vi.fn(), isPending: false },
+          confirmAgreement: { mutate: vi.fn(), isPending: false },
+        }) as never,
+    )
+    render(<JudgmentLogPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /첫째 안건/ }))
+    fireEvent.change(screen.getByLabelText('의견 작성'), { target: { value: '첫째에 쓴 의견' } })
+    fireEvent.click(screen.getByRole('button', { name: /둘째 안건/ }))
+
+    expect(screen.getByLabelText('제목')).toHaveValue('둘째 안건')
+    expect(screen.getByLabelText('내용')).toHaveValue('둘째 내용')
+    expect(screen.getByLabelText('의견 작성')).toHaveValue('')
   })
 })
