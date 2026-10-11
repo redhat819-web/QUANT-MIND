@@ -32,6 +32,29 @@ Sync Impact Report (this amendment)
   - .specify/templates/tasks-template.md — no direct dependency detected.
 -->
 
+<!--
+Sync Impact Report (proposal recorded 2026-10-11, NOT YET IN EFFECT)
+- Version change: none yet. Effective version stays 1.1.0.
+  Proposed: 1.1.0 → 2.0.0 (MAJOR: principles I, VII, VIII, IX are redefined)
+- Proposed modifications (see "개정 제안 2.0.0 (미발효)" section):
+  - I. 동등한 운영자 권한 → I. household 구성원의 동등한 권한
+  - VII. 판단 기록의 작성자·시각 기록 → 탈퇴 구성원 기록의 삭제·"떠난 구성원" 표시 예외 추가
+  - VIII. 합의 확정 기록의 변경 이력 보존 → 탈퇴자 기록 삭제의 허용 조건(7일 이상 내보내기 기간,
+    사전 안내) 추가
+  - IX. 원본 스프레드시트 형식 존중과 매핑 흡수 → 버전 있는 표준 양식 수집 허용
+- Added sections: "개정 제안 2.0.0 (미발효)" (proposal record only)
+- Removed sections: none
+- Deferred / TODO:
+  - TODO(SECOND_OPERATOR_CONSENT): Governance requires explicit consent from both operators.
+    Proposed by one operator on 2026-10-11; the other operator's consent is pending.
+    On consent: replace principles I, VII, VIII, IX with the proposal text, set Version 2.0.0,
+    Last Amended to the consent date, and remove the proposal section.
+- Templates requiring follow-up review (not modified by this command):
+  - .specify/templates/plan-template.md — Constitution Check of 002 must use 1.1.0 until consent,
+    and 2.0.0 after it.
+  - specs/002-household-onboarding/spec.md — Assumptions "헌장과의 충돌" item to be updated on consent.
+-->
+
 # QUANT-MIND 공동 자산 관리 대시보드 Constitution
 
 ## Core Principles
@@ -308,6 +331,69 @@ API 키, 인증 토큰, 시크릿 등은 코드, 설정 파일, 커밋 이력에
 셋 중 하나라도 충족되지 않으면 해당 Task는 진행 중(in progress) 또는 보류(blocked)
 상태로 유지한다. 명세에 없는 범위 확장이 필요하다고 판단되면 구현을 멈추고 먼저 명세
 갱신 여부를 사용자와 확인한다.
+
+## 개정 제안 2.0.0 (미발효)
+<!-- 상용화(specs/002-household-onboarding) 대응. 두 운영자의 명시적 동의 전까지 효력이 없으며,
+     그 전까지는 위의 원칙 I, VII, VIII, IX 원문이 적용된다. -->
+
+**상태**: 제안 (제안일 2026-10-11, 제안자: 운영자 1인) — 상대 운영자 동의 대기
+**근거**: `specs/002-household-onboarding/spec.md` Clarifications 2026-10-11,
+`docs/COMMERCIALIZATION_MEASUREMENT.md`
+
+### I. household 구성원의 동등한 권한 (Equal Authority Within a Household) — 제안
+한 household에 속한 두 구성원은 시스템 내에서 완전히 동등한 권한을 가진다. household를 만든
+사람도 합류한 사람과 같은 권한을 가지며, 생성자 권한, 관리자 역할, 승인권자, 최종 결정권자를
+두지 않는다. 승인/거부 워크플로우, 역할 계층, 한쪽만 실행 가능한 특권 동작을 설계하거나 구현하지
+않는다. 이 원칙은 기존 두 운영자의 household에도 그대로 적용된다.
+
+**이유**: 서비스 대상이 불특정 부부로 넓어져도 대등한 협의라는 근본 취지는 같다. 먼저 가입한
+쪽에게 권한이 쏠리면 배우자의 합류와 신뢰를 해친다.
+
+**검토 기준**: 역할(role) 필드나 권한 분기 로직이 household 구성원 간에 비대칭적으로 존재하지
+않는지, "생성자 전용", "관리자", "승인" 같은 상하 구조 용어가 없는지 확인한다.
+
+### VII. 판단 기록의 작성자·시각 기록 (Authorship and Timestamp on Every Judgment) — 제안
+household 구성원이 남기는 모든 판단·의견·합의 기록에는 작성자 식별 정보와 작성 시각이 함께
+저장되고 표시된다. 익명 또는 시각 정보가 빠진 기록은 허용하지 않는다.
+
+**예외**: 원칙 VIII의 탈퇴 절차를 마친 구성원에 한해, 그 구성원이 작성한 기록은 삭제할 수 있다.
+삭제 대상이 아닌 기록(예: 떠난 구성원이 남은 구성원의 안건에 확정한 합의)은 남기되, 작성자 또는
+확정자를 "떠난 구성원"으로 표시할 수 있다. 시각 정보는 유지한다.
+
+**이유**: 기록의 신뢰는 누가 언제 남겼는지에서 나온다. 다만 상용 서비스에서는 떠난 사람의 개인
+영역을 지울 수 있어야 한다.
+
+**검토 기준**: 기록 스키마에 작성자·시각이 NOT NULL로 강제되는지, "떠난 구성원" 표시는 탈퇴 절차가
+끝난 기록에서만 나타나는지 확인한다.
+
+### VIII. 합의 확정 기록의 변경 이력 보존 (Immutable History on Confirmed Records) — 제안
+합의가 확정된 기록을 이후 수정할 경우, 원본을 덮어쓰지 않고 변경 이력(이전 값, 수정자, 수정 시각,
+사유)을 남긴다.
+
+**예외(탈퇴자 기록 삭제)**: 탈퇴한 구성원이 작성한 기록과 그 이력의 삭제는 다음을 모두 만족할 때만
+허용한다. (1) 삭제 대상과 삭제 예정 시각을 탈퇴 요청 전에 떠나는 사람에게, 절차 시작 시 남는
+사람에게 안내한다. (2) 요청과 삭제 사이에 7일 이상의 내보내기 기간을 두고, 이 기간에 두 구성원
+모두 삭제될 기록을 내려받을 수 있다. (3) 기간 중에는 탈퇴를 취소할 수 있고, 기간이 끝나기 전에는
+아무것도 삭제하지 않는다. 그 밖의 사유로 확정 기록을 조용히 지우거나 덮어쓰지 않는다.
+
+**이유**: 확정된 합의는 신뢰의 기준점이다. 삭제를 허용하더라도 남는 사람이 미리 알고 보관할 수
+있어야 조용한 삭제가 되지 않는다.
+
+**검토 기준**: 확정 기록 수정이 이력 엔트리를 만드는지, 삭제 경로가 탈퇴 절차(안내, 7일 이상 기간,
+양측 내보내기, 취소 가능)를 거치는 경우에만 존재하는지 확인한다.
+
+### IX. 자산 데이터 수집 형식 (Asset Data Intake Format) — 제안
+자산 데이터는 다음 두 방식 중 하나로 받는다. (1) 서비스가 제공하는 **버전 있는 표준 양식**: 양식과
+작성 안내를 누구나 내려받을 수 있어야 하며, 업로드는 전체 검증을 통과할 때만 반영한다. 이전 버전
+양식은 읽을 수 있는 한 받아야 한다. (2) 기존 두 운영자의 원본 스프레드시트: 원본 구조를 강제로
+바꾸지 않고 매핑 정의로 흡수하는 방식을 유지할 수 있다. 어느 방식이든 인식되지 않는 종목은 제외하지
+않고 "미매핑"으로 표시하며, 고객에게 운영 측 비밀 키를 주거나 다루게 하지 않는다(원칙 IV).
+
+**이유**: 불특정 사용자마다 다른 형식을 매핑으로 흡수하는 방식은 상용 서비스에서 감당할 수 없고,
+개인별 형식에 맞춘 연동은 지나치게 개인적이다. 표준 양식은 누구나 같은 방법으로 시작하게 한다.
+
+**검토 기준**: 표준 양식에 버전이 있는지, 검증 실패 시 아무것도 반영되지 않는지, 미매핑 종목이
+목록에서 빠지지 않는지, 고객 흐름에 비밀 키가 등장하지 않는지 확인한다.
 
 ## Governance
 
