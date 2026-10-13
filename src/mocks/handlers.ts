@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { buildMockAccountSummaries, buildMockDashboardSummary } from './aggregate'
+import { mockAgendaHistory } from './fixtures/agendaHistory'
 import { mockAgendas } from './fixtures/agendas'
 import { mockAgreementRecords } from './fixtures/agreements'
 import { mockHoldings } from './fixtures/holdings'
@@ -9,6 +10,7 @@ import type { Agenda, AgendaDetail, Classification } from '../types/domain'
 let nextAgendaId = mockAgendas.length + 1
 let nextOpinionId = mockOpinions.length + 1
 let nextAgreementId = mockAgreementRecords.length + 1
+let nextHistoryId = mockAgendaHistory.length + 1
 
 function findAgendaDetail(agendaId: string): AgendaDetail | null {
   const agenda = mockAgendas.find((a) => a.id === agendaId)
@@ -17,6 +19,9 @@ function findAgendaDetail(agendaId: string): AgendaDetail | null {
     agenda,
     opinions: mockOpinions.filter((o) => o.agendaId === agendaId),
     agreementRecord: mockAgreementRecords.find((r) => r.agendaId === agendaId) ?? null,
+    history: mockAgendaHistory
+      .filter((h) => h.agendaId === agendaId)
+      .sort((a, b) => b.changedAt.localeCompare(a.changedAt)),
   }
 }
 
@@ -93,12 +98,38 @@ export const handlers = [
       title: string
       body: string
       requestedByUserId: string
+      requestedByDisplayName?: string
+      reason?: string
     }
     const agenda = mockAgendas.find((a) => a.id === params.id)
     if (!agenda) {
       return HttpResponse.json({ message: '안건을 찾을 수 없습니다.' }, { status: 404 })
     }
-    if (agenda.status !== 'discussing' || agenda.authorUserId !== body.requestedByUserId) {
+    // 합의완료 안건: 구성원 누구나, 사유 필수, 이전 값을 이력으로 남긴다(FR-021)
+    if (agenda.status === 'agreed') {
+      const reason = body.reason?.trim()
+      if (!reason) {
+        return HttpResponse.json({ message: '수정 사유를 입력해주세요.' }, { status: 400 })
+      }
+      const changedAt = new Date().toISOString()
+      if (agenda.title !== body.title || agenda.body !== body.body) {
+        mockAgendaHistory.push({
+          id: `history-${nextHistoryId++}`,
+          agendaId: agenda.id,
+          changedByUserId: body.requestedByUserId,
+          changedByDisplayName: body.requestedByDisplayName ?? '',
+          changedAt,
+          reason,
+          previousTitle: agenda.title,
+          previousBody: agenda.body,
+        })
+      }
+      agenda.title = body.title
+      agenda.body = body.body
+      agenda.updatedAt = changedAt
+      return HttpResponse.json(agenda)
+    }
+    if (agenda.authorUserId !== body.requestedByUserId) {
       return HttpResponse.json(
         { message: '논의중 상태의 작성자 본인만 수정할 수 있습니다.' },
         { status: 403 },

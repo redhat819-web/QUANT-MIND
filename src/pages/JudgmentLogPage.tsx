@@ -18,14 +18,15 @@ function failureMessage(mutation: { isError?: boolean; error?: Error | null }) {
 }
 
 /**
- * User Story 3 - 투자 안건 작성과 합의 기록(FR-016~FR-020, FR-022, FR-023).
+ * User Story 3 - 투자 안건 작성과 합의 기록(FR-016~FR-023).
  * 안건 작성 → 상대 운영자 의견 → 합의 확정(의견 0건도 허용) → 확정 목록
- * 재조회 흐름을 Mock 데이터로 완성한다.
+ * 재조회, 합의완료 안건의 사유 있는 수정과 변경 이력(FR-021).
  */
 export function JudgmentLogPage() {
   const { user } = useAuth()
   const [selectedAgendaId, setSelectedAgendaId] = useState<string | null>(null)
   const [isComposing, setIsComposing] = useState(false)
+  const [isEditingAgreed, setIsEditingAgreed] = useState(false)
 
   const agendasQuery = useAgendas()
   const detailQuery = useAgendaDetail(selectedAgendaId)
@@ -90,7 +91,10 @@ export function JudgmentLogPage() {
           <AgendaList
             agendas={agendasQuery.data}
             selectedAgendaId={selectedAgendaId}
-            onSelectAgenda={setSelectedAgendaId}
+            onSelectAgenda={(agendaId) => {
+              setSelectedAgendaId(agendaId)
+              setIsEditingAgreed(false)
+            }}
           />
         </section>
 
@@ -135,11 +139,66 @@ export function JudgmentLogPage() {
                       title,
                       body,
                       requestedByUserId: user.id,
+                      requestedByDisplayName: user.displayName,
                     })
                   }}
                 />
+              ) : detailQuery.data.agenda.status === 'agreed' && isEditingAgreed ? (
+                <div>
+                  <p className="agreement-action-bar__hint">
+                    합의된 내용을 바꾸면 이전 제목·내용과 사유가 변경 이력으로 남습니다.
+                  </p>
+                  <AgendaForm
+                    mode="edit"
+                    requireReason
+                    initialTitle={detailQuery.data.agenda.title}
+                    initialBody={detailQuery.data.agenda.body}
+                    disabled={detailQuery.updateAgenda.isPending}
+                    submitError={failureMessage(detailQuery.updateAgenda)}
+                    onSubmit={({ title, body, reason }, onSaved) => {
+                      if (!user) return
+                      detailQuery.updateAgenda.mutate(
+                        {
+                          title,
+                          body,
+                          reason,
+                          requestedByUserId: user.id,
+                          requestedByDisplayName: user.displayName,
+                        },
+                        {
+                          onSuccess: () => {
+                            onSaved()
+                            setIsEditingAgreed(false)
+                          },
+                        },
+                      )
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={detailQuery.updateAgenda.isPending}
+                    onClick={() => setIsEditingAgreed(false)}
+                  >
+                    취소
+                  </button>
+                </div>
               ) : (
-                <p className="agenda-detail-panel__body">{detailQuery.data.agenda.body}</p>
+                <>
+                  <p className="agenda-detail-panel__body">{detailQuery.data.agenda.body}</p>
+                  {detailQuery.data.agenda.status === 'agreed' && user ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => {
+                        detailQuery.updateAgenda.reset()
+                        setIsEditingAgreed(true)
+                      }}
+                    >
+                      합의 내용 수정
+                    </button>
+                  ) : null}
+                </>
               )}
 
               <div>
@@ -190,6 +249,32 @@ export function JudgmentLogPage() {
                   시각: {formatDateTime(detailQuery.data.agreementRecord.confirmedAt)} ·
                   확정 시점 의견 {detailQuery.data.agreementRecord.opinionCountAtConfirmation}건
                 </p>
+              ) : null}
+
+              {detailQuery.data.history.length > 0 ? (
+                <div>
+                  <h3>변경 이력</h3>
+                  <ul className="list-reset" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {detailQuery.data.history.map((entry) => (
+                      <li key={entry.id} className="opinion-card">
+                        <div className="opinion-card__meta">
+                          <strong style={{ color: 'var(--color-text)' }}>
+                            {entry.changedByDisplayName}
+                          </strong>
+                          <span className="num">{formatDateTime(entry.changedAt)}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.85rem' }}>사유: {entry.reason}</p>
+                        <details>
+                          <summary style={{ fontSize: '0.75rem' }}>이전 내용 보기</summary>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
+                            <strong>{entry.previousTitle}</strong>
+                          </p>
+                          <p style={{ margin: 0, fontSize: '0.85rem' }}>{entry.previousBody}</p>
+                        </details>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
           )}

@@ -26,6 +26,7 @@ function mockDetail(overrides: Partial<AgendaDetail> = {}): AgendaDetail {
     agenda: mockAgenda(),
     opinions: [],
     agreementRecord: null,
+    history: [],
     ...overrides,
   }
 }
@@ -358,5 +359,87 @@ describe('JudgmentLogPage', () => {
     expect(screen.getByLabelText('제목')).toHaveValue('둘째 안건')
     expect(screen.getByLabelText('내용')).toHaveValue('둘째 내용')
     expect(screen.getByLabelText('의견 작성')).toHaveValue('')
+  })
+
+  it('합의완료 안건은 수정 사유가 없으면 저장하지 않고, 있으면 사유와 함께 저장한다(FR-021)', () => {
+    mockUseAuth('user-partner', '상대방') // 작성자가 아니어도 합의완료 안건은 수정 가능(FR-003)
+    const agreed = mockAgenda({ status: 'agreed' })
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [agreed],
+      refetch: vi.fn(),
+      createAgenda: { mutate: vi.fn(), isPending: false } as never,
+    })
+    const updateMutate = vi.fn()
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: mockDetail({ agenda: agreed }),
+      updateAgenda: { mutate: updateMutate, isPending: false, reset: vi.fn() } as never,
+      addOpinion: { mutate: vi.fn(), isPending: false } as never,
+      confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
+    })
+    render(<JudgmentLogPage />)
+    fireEvent.click(screen.getByRole('button', { name: /해외 ETF 비중 논의/ }))
+    fireEvent.click(screen.getByRole('button', { name: '합의 내용 수정' }))
+
+    fireEvent.change(screen.getByLabelText('제목'), { target: { value: '해외 ETF 비중 축소' } })
+    fireEvent.click(screen.getByRole('button', { name: '이력 남기고 수정' }))
+    expect(updateMutate).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('수정 사유'), { target: { value: '방향 재검토' } })
+    fireEvent.click(screen.getByRole('button', { name: '이력 남기고 수정' }))
+    expect(updateMutate).toHaveBeenCalledWith(
+      {
+        title: '해외 ETF 비중 축소',
+        body: agreed.body,
+        reason: '방향 재검토',
+        requestedByUserId: 'user-partner',
+        requestedByDisplayName: '상대방',
+      },
+      expect.anything(),
+    )
+  })
+
+  it('변경 이력을 수정자·시각·사유와 함께 표시한다(FR-021)', () => {
+    mockUseAuth()
+    const agreed = mockAgenda({ status: 'agreed', title: '바뀐 제목' })
+    mockUseAgendas({
+      isLoading: false,
+      isError: false,
+      data: [agreed],
+      refetch: vi.fn(),
+      createAgenda: { mutate: vi.fn(), isPending: false } as never,
+    })
+    mockUseAgendaDetail({
+      isLoading: false,
+      isError: false,
+      data: mockDetail({
+        agenda: agreed,
+        history: [
+          {
+            id: 'history-1',
+            agendaId: agreed.id,
+            changedByUserId: 'user-partner',
+            changedByDisplayName: '상대방',
+            changedAt: '2026-10-10T10:00:00+09:00',
+            reason: '금액 정정',
+            previousTitle: '해외 ETF 비중 논의',
+            previousBody: '이전 내용',
+          },
+        ],
+      }),
+      updateAgenda: { mutate: vi.fn(), isPending: false, reset: vi.fn() } as never,
+      addOpinion: { mutate: vi.fn(), isPending: false } as never,
+      confirmAgreement: { mutate: vi.fn(), isPending: false } as never,
+    })
+    render(<JudgmentLogPage />)
+    fireEvent.click(screen.getByRole('button', { name: /바뀐 제목/ }))
+
+    expect(screen.getByRole('heading', { name: '변경 이력' })).toBeInTheDocument()
+    expect(screen.getByText('사유: 금액 정정')).toBeInTheDocument()
+    expect(screen.getByText('이전 내용')).toBeInTheDocument()
   })
 })
