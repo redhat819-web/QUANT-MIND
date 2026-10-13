@@ -55,7 +55,7 @@
 | 대상 | 결과 | 근거 |
 |---|---|---|
 | 앱 코드의 localStorage·sessionStorage | 사용하는 곳 없음. 즐겨찾기·최근 입력에 해당하는 기능도 없음 | `src/` 전체 검색 0건 |
-| 로그인 세션 | Supabase 라이브러리가 기본값으로 세션 토큰을 localStorage에 저장(앱이 직접 저장하지 않음) | `src/lib/supabase.ts`의 `createClient(url, anonKey)`(옵션 없음, `feat/judgment-log-supabase` 브랜치) |
+| 로그인 세션 | Supabase 라이브러리가 기본값으로 세션 토큰을 localStorage에 저장(앱이 직접 저장하지 않음) | `src/lib/supabase.ts`의 `createClient(url, anonKey)`(옵션 없음, main에 머지됨 `1d93cb6`, 2026-10-13 재확인) |
 | 002 계획 | 초대 토큰은 sessionStorage에 잠시 보관, 로그인 전 분석 동의 선택은 브라우저 저장(try/catch) | 002 tasks의 초대 수락 화면, 분석 동의 UI 작업 |
 
 ## 5. 재방문 경험 개선 후보 (모두 제안, 현재 없는 기능)
