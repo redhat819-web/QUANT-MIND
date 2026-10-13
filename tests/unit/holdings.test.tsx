@@ -133,4 +133,24 @@ describe('HoldingsPage', () => {
       expect(mutate).toHaveBeenCalledWith({ holdingId: 'hold-1', classification: 'defensive' })
     })
   })
+
+  it('분류 변경이 실패하면 실패 사유를 보여준다', () => {
+    mockUseAccounts({ isLoading: false, isError: false, data: [mockAccount()], refetch: vi.fn() })
+    mockUseHoldingDetail({
+      isLoading: false,
+      isError: false,
+      data: [mockHolding()],
+      updateClassification: {
+        mutate: vi.fn(),
+        isPending: false,
+        isError: true,
+        error: new Error('분류는 시트의 "종목분류" 탭에서 변경합니다.'),
+      } as never,
+    })
+    render(<HoldingsPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '상세 모드' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('종목분류')
+  })
 })

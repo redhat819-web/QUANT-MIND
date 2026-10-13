@@ -6,7 +6,10 @@ interface AgendaFormProps {
   initialTitle?: string
   initialBody?: string
   disabled?: boolean
-  onSubmit: (input: { title: string; body: string }) => void
+  /** 저장 실패 사유. 입력은 그대로 남아 있어 같은 버튼으로 다시 시도할 수 있다 */
+  submitError?: string | null
+  /** 저장이 성공했을 때 호출부가 onSaved를 부른다 — 그때만 입력을 비운다 */
+  onSubmit: (input: { title: string; body: string }, onSaved: () => void) => void
 }
 
 /**
@@ -19,6 +22,7 @@ export function AgendaForm({
   initialTitle = '',
   initialBody = '',
   disabled = false,
+  submitError = null,
   onSubmit,
 }: AgendaFormProps) {
   const [title, setTitle] = useState(initialTitle)
@@ -33,12 +37,15 @@ export function AgendaForm({
       return
     }
     setError(null)
-    onSubmit(result.data)
-    if (mode === 'create') {
-      setTitle('')
-      setBody('')
-    }
+    onSubmit(result.data, () => {
+      if (mode === 'create') {
+        setTitle('')
+        setBody('')
+      }
+    })
   }
+
+  const alertMessage = error ?? submitError
 
   return (
     <form onSubmit={handleSubmit}>
@@ -60,9 +67,9 @@ export function AgendaForm({
           onChange={(event) => setBody(event.target.value)}
         />
       </div>
-      {error ? (
+      {alertMessage ? (
         <p role="alert" className="state-error">
-          {error}
+          {alertMessage}
         </p>
       ) : null}
       <button type="submit" className="btn btn-primary" disabled={disabled}>

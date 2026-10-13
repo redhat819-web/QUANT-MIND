@@ -7,11 +7,19 @@ import type { Opinion } from '../../../types/domain'
 interface OpinionThreadProps {
   opinions: Opinion[]
   disabled?: boolean
-  onSubmit: (body: string) => void
+  /** 저장 실패 사유. 입력은 그대로 남아 있어 같은 버튼으로 다시 시도할 수 있다 */
+  submitError?: string | null
+  /** 저장이 성공했을 때 호출부가 onSaved를 부른다 — 그때만 입력을 비운다 */
+  onSubmit: (body: string, onSaved: () => void) => void
 }
 
 /** 의견 목록·작성, 1~2000자 검증, 작성자·작성 시각 함께 표시(FR-017, FR-022) */
-export function OpinionThread({ opinions, disabled = false, onSubmit }: OpinionThreadProps) {
+export function OpinionThread({
+  opinions,
+  disabled = false,
+  submitError = null,
+  onSubmit,
+}: OpinionThreadProps) {
   const [body, setBody] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -23,9 +31,10 @@ export function OpinionThread({ opinions, disabled = false, onSubmit }: OpinionT
       return
     }
     setError(null)
-    onSubmit(result.data.body)
-    setBody('')
+    onSubmit(result.data.body, () => setBody(''))
   }
+
+  const alertMessage = error ?? submitError
 
   return (
     <div>
@@ -56,9 +65,9 @@ export function OpinionThread({ opinions, disabled = false, onSubmit }: OpinionT
             onChange={(event) => setBody(event.target.value)}
           />
         </div>
-        {error ? (
+        {alertMessage ? (
           <p role="alert" className="state-error">
-            {error}
+            {alertMessage}
           </p>
         ) : null}
         <button type="submit" className="btn btn-primary" disabled={disabled}>

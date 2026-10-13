@@ -51,6 +51,12 @@ export function HoldingsPage() {
       {mode === 'detail' ? (
         <section>
           <h2>종목 상세</h2>
+          {/* 분류 변경 실패 시 select는 원래 값으로 돌아가므로 사유를 함께 보여준다. 다시 고르면 재시도 */}
+          {holdingsQuery.updateClassification.isError ? (
+            <p role="alert" className="state-error">
+              {holdingsQuery.updateClassification.error?.message ?? '분류 변경에 실패했습니다.'}
+            </p>
+          ) : null}
           {holdingsQuery.isLoading ? (
             <LoadingState label="종목 상세를 불러오는 중" />
           ) : holdingsQuery.isError || !holdingsQuery.data ? (
