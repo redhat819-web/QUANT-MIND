@@ -378,7 +378,8 @@ G2·G3가 열리지 않으면 해당 스토리만 보류하고 나머지는 진�
 - [ ] T058 [P] [US5] 통합 테스트 `tests/integration/activation.test.ts`를 만든다.
   - `record_valid_summary_view`는 조건 ①~⑤ 중 하나라도 빠지면 `counted=false`
   - 모두 충족하면 `first_valid_view_at`이 한 번만 설정됨
-  - `activation_record`를 클라이언트가 읽을 수 없음
+  - 같은 날 두 번 호출해도 `activation_view_day`는 1행
+  - `activation_record`·`activation_view_day`를 클라이언트가 읽을 수 없음
   - (data-model §3, FR-022)
 
 ### Implementation for User Story 5
@@ -403,7 +404,8 @@ G2·G3가 열리지 않으면 해당 스토리만 보류하고 나머지는 진�
   - (FR-020, AGENTS.md "분석 이벤트는 단계별로")
 - [ ] T062 [US5] 마이그레이션 `supabase/migrations/20261014120600_activation.sql`에
   `record_valid_summary_view(p_had_sync_failure)`를 만든다. 서버에서 조건을 다시 검사하고,
-  `first_valid_view_at`·`last_valid_view_at`·`last_fresh_valid_view_at`을 갱신한다. (data-model §3, research R9)
+  `first_valid_view_at`·`last_valid_view_at`·`last_fresh_valid_view_at`을 갱신한다. 같은 마이그레이션에
+  `activation_view_day` 테이블을 만들고, 그날(KST) 첫 유효 조회일 때 한 행을 넣는다. (data-model §2–3, research R9)
 - [ ] T063 [US5] `src/features/dashboard/hooks/useRecordValidView.ts`를 만든다. 대시보드 조회가 성공하고
   화면 조건(구성원 2명, 두 사람 공개, 기준 시점 있음)을 만족할 때 세션당 한 번 호출한다. `DashboardPage.tsx`에
   연결하며, mock 모드에서는 호출하지 않는다. (docs/ACTIVATION_DEFINITION.md §2)
@@ -412,7 +414,8 @@ G2·G3가 열리지 않으면 해당 스토리만 보류하고 나머지는 진�
   - NSM(28일, 최신 데이터)
   - I1·I2
   - G1·G2
-  - (docs/ACTIVATION_DEFINITION.md §3, docs/NORTH_STAR_METRIC.md)
+  - 4주 가치 재사용률(코호트별, 단순 평균, 가중 비율, 진행 중 코호트 제외)과 28일·35일·56일 비교
+  - (docs/ACTIVATION_DEFINITION.md §3, docs/NORTH_STAR_METRIC.md, docs/RETENTION_REVIEW_PRACTICE.md)
 
 **Checkpoint**: quickstart §3(분석 전송 확인)이 모두 기대대로 동작한다.
 
@@ -532,3 +535,4 @@ Task: "양식 파일 생성 scripts/build-asset-template.ts"
 ## 진행 메모
 
 - 2026-10-13: tasks.md 생성. 게이트 G1(선행 PR 머지)과 G2·G3(헌장 2.0.0 동의)이 열려 있지 않다.
+- 2026-10-13: 4주 재사용률 측정을 위해 `activation_view_day`를 T058·T062·T064 범위에 추가했다(작업 수 변화 없음).

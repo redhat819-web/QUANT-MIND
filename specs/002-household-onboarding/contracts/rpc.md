@@ -44,7 +44,7 @@
 
 | 함수 | 입력 | 반환 | 실행 권한 | 규칙 |
 |---|---|---|---|---|
-| `record_valid_summary_view(p_had_sync_failure boolean)` | 화면에 실패 배지가 있었는지 | `{ counted: boolean }` | definer | `data-model.md` §3 조건을 서버에서 다시 검사한다. 통과하면 `first_valid_view_at`(비어 있을 때만), `last_valid_view_at`, 조건부로 `last_fresh_valid_view_at`을 갱신 |
+| `record_valid_summary_view(p_had_sync_failure boolean)` | 화면에 실패 배지가 있었는지 | `{ counted: boolean }` | definer | `data-model.md` §3 조건을 서버에서 다시 검사한다. 통과하면 `first_valid_view_at`(비어 있을 때만), `last_valid_view_at`, 조건부로 `last_fresh_valid_view_at`을 갱신. 그날(KST) 첫 유효 조회면 `activation_view_day`에 한 행 추가(`had_fresh_data` 포함) |
 
 ## 탈퇴·삭제
 
@@ -66,4 +66,4 @@
 | `invitation` | 같은 household 구성원 select. `token_hash` 컬럼은 select 권한에서 제외 |
 | `asset_upload` | 본인 행 select |
 | `departure_request` | 직접 select 없음(`get_departure_status`로만) |
-| `activation_record` | 클라이언트 권한 없음 |
+| `activation_record`, `activation_view_day` | 클라이언트 권한 없음 |

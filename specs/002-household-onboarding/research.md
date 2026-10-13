@@ -136,6 +136,8 @@ Function)에서 파싱 — 파일 원본이 서버를 거치게 되고 배포 �
 - 대시보드가 조건을 만족해 보이면 클라이언트는 `record_valid_summary_view()`를 부른다. 서버는
   Activation 조건 ①~⑤를 **다시 검사**하고, 통과할 때만 시각을 갱신한다.
 - 두 구성원의 마지막 반영이 모두 30일 이내이면 `last_fresh_valid_view_at`도 갱신한다(NSM 품질 조건).
+- 날짜별 기록 `activation_view_day`(household마다 KST 날짜당 1행)를 함께 남긴다(2026-10-13 추가). 첫·마지막
+  시각만으로는 "28일 안에 다른 날 다시 봤는지"를 판단할 수 없기 때문이다.
 
 **Rationale**: 분석 이벤트에는 household 식별자를 보낼 수 없다(FR-021). 그래서 household 단위 지표는
 서비스 기록으로 센다(FR-022). 서버 재검사로 클라이언트 조작을 막는다. 삭제된 household도 분모에

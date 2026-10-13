@@ -24,7 +24,7 @@
 - 추가: `read-excel-file`, `write-excel-file`(MIT, 양식 읽기·내보내기, R5·R7), GA4 gtag(동적 로드, R8)
 - DB 확장: `pg_cron`(탈퇴 삭제 예약 실행, R10)
 
-**Storage**: Supabase PostgreSQL. 001 테이블에 컬럼 추가와 새 테이블 7개(`data-model.md`). 업로드한
+**Storage**: Supabase PostgreSQL. 001 테이블에 컬럼 추가와 새 테이블 8개(`data-model.md`). 업로드한
 파일 원본은 저장하지 않는다.
 
 **Testing**: Vitest(단위), `npm run test:integration`(RPC·RLS, 테스트 계정 환경변수), Playwright(mock

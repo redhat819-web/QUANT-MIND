@@ -130,6 +130,19 @@
   `record_valid_summary_view`(모두 security definer)만 쓴다.
 - household가 삭제되어도 남는다(분모 보존, `docs/ACTIVATION_DEFINITION.md`).
 
+### activation_view_day (식별자 없음, 2026-10-13 추가)
+| 필드 | 타입 | 규칙 |
+|---|---|---|
+| `activation_record_id` | uuid → activation_record(id) on delete cascade | |
+| `view_date_kst` | date | 유효 조회가 있었던 KST 날짜 |
+| `had_fresh_data` | boolean not null | 그날 첫 유효 조회 시점에 두 구성원 반영이 모두 30일 이내였는지 |
+
+- 기본키는 (`activation_record_id`, `view_date_kst`)다. household마다 날짜당 1행만 남는다.
+- `record_valid_summary_view`가 그날 첫 유효 조회일 때만 insert한다(`on conflict do nothing`). 클라이언트
+  권한은 없다.
+- 용도: 4주 가치 재사용률. 첫 성공일 다음 날부터 28일 안에 다른 날의 행이 있는지 본다. 같은 날 다시 본
+  것은 세지 않는다(`docs/RETENTION_REVIEW_PRACTICE.md`).
+
 ## 3. 유효한 부부 합계 판단(서버)
 
 `record_valid_summary_view()`가 아래 조건을 모두 검사한다. 근거는 `docs/ACTIVATION_DEFINITION.md` §2.
