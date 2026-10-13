@@ -41,7 +41,7 @@ G2·G3가 열리지 않으면 해당 스토리만 보류하고 나머지는 진�
 
 **Purpose**: 의존성, 환경변수, 공통 타입 준비
 
-- [ ] T001 게이트 G1 확인: 위 세 PR이 main에 머지됐는지 확인하고 `002-household-onboarding`을 main
+- [X] T001 게이트 G1 확인: 위 세 PR이 main에 머지됐는지 확인하고 `002-household-onboarding`을 main
   위로 rebase한다. `src/features/dashboard/api/supabaseDashboard.ts`와
   `src/features/judgment-log/api/supabaseAgendas.ts`가 있는지 확인하고, 결과를 이 파일 하단 "진행 메모"에
   기록한다.
@@ -536,3 +536,4 @@ Task: "양식 파일 생성 scripts/build-asset-template.ts"
 
 - 2026-10-13: tasks.md 생성. 게이트 G1(선행 PR 머지)과 G2·G3(헌장 2.0.0 동의)이 열려 있지 않다.
 - 2026-10-13: 4주 재사용률 측정을 위해 `activation_view_day`를 T058·T062·T064 범위에 추가했다(작업 수 변화 없음).
+- 2026-10-13: T001 완료. 선행 3개 브랜치를 PR 없이 로컬에서 머지 커밋으로 main에 반영했다(1d93cb6, 사용자 지시 "B로 진행"). 머지 전 lint(경고 2, 오류 0)·단위 38·e2e 16·build 통과. 002 브랜치를 main 위로 rebase했고, `supabaseDashboard.ts`·`supabaseAgendas.ts` 존재를 확인했다.
