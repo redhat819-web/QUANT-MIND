@@ -392,10 +392,19 @@ Sheets 어댑터(Phase 8) 시작 가능
   `supabase/migrations/20261004130000_prune_sold_holdings.sql`.
 - 자산분류 열은 상품 유형(국내주식 등)이라 성장/방어로 매핑하지 않음 — 주식은
   `unclassified`로 저장, 분류는 `mapping_rule`(종목코드 기준)로 채운다.
-- [ ] T055 Supabase 어댑터 구현 — `useAccounts`/`useHoldingDetail`/
+- [X] T055 Supabase 어댑터 구현 — `useAccounts`/`useHoldingDetail`/
       `useDashboardSummary`가 `personal_aggregate_view`/
       `household_aggregate_view`/`allocation_view`를 조회하도록 구현 in
       `src/features/dashboard/api/`, `src/features/holdings/api/`
+      **구현 메모(2026-10-09)**: 훅은 `useDataSource()`로 mock/supabase를 고르고
+      반환 타입은 그대로다. RLS가 authenticated만 허용하므로 `AuthProvider`를
+      supabase 모드에서 `signInWithPassword` + 세션 구독으로 바꿨다(mock 모드
+      동작은 그대로). 나/상대방은 로그인 사용자 기준으로 정하고 자녀 계좌는
+      나/상대방·부부 합계에 넣지 않는다(뷰와 같은 규칙). 계좌 손익률은 뷰와 같은
+      원가 기준. `unclassified`는 `HoldingClassification` 타입으로 표현하고,
+      비중에는 0보다 클 때만 붙는다. supabase 모드의 분류 변경은 시트 탭이
+      정본이라 막아 두었다(T057에서 다룸). 실DB에서 두 구성원 모두 서비스 롤과
+      같은 계좌 10·종목 68을 조회하고 anon은 거부됨을 확인.
 - [ ] T056 [US1] `DashboardPage`/`SyncStatusBanner`를 Supabase 어댑터에 연결,
       `as_of_synced_at`/`has_sync_failure` 반영 (FR-024)
       **원칙(2026-10-04)**: 분류 정본은 한 곳만 둔다(우선순위 규칙 없음). 지금은

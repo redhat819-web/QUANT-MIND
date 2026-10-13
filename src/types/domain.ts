@@ -1,5 +1,8 @@
 export type Classification = 'growth' | 'defensive' | 'cash'
 
+/** 실데이터에는 분류 규칙이 아직 없는 종목(unclassified)이 있을 수 있다(FR-015) */
+export type HoldingClassification = Classification | 'unclassified'
+
 export type SyncStatus = 'success' | 'failed'
 
 export interface Account {
@@ -20,7 +23,7 @@ export interface Holding {
   quantity: number
   marketValueKrw: number
   returnRate: number
-  classification: Classification
+  classification: HoldingClassification
   ticker: string | null
   currency: string | null
   averageCost: number | null
@@ -49,7 +52,7 @@ export interface HouseholdAggregate {
 }
 
 export interface AllocationWeight {
-  classification: Classification
+  classification: HoldingClassification
   marketValueKrw: number
   weightRatio: number
 }

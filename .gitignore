@@ -32,3 +32,6 @@ test-results
 .claude.json
 
 tsconfig.tsbuildinfo
+
+# oh-my-claudecode tool state
+.omc/

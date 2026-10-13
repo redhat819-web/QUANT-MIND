@@ -1,16 +1,18 @@
 import { formatKrw, formatWeightRatio } from '../../../lib/format'
-import type { AllocationWeight, Classification } from '../../../types/domain'
+import type { AllocationWeight, HoldingClassification } from '../../../types/domain'
 
-const CLASSIFICATION_LABEL: Record<Classification, string> = {
+const CLASSIFICATION_LABEL: Record<HoldingClassification, string> = {
   growth: '성장자산',
   defensive: '방어자산',
   cash: '현금성자산',
+  unclassified: '미분류',
 }
 
-const CLASSIFICATION_MODIFIER: Record<Classification, string> = {
+const CLASSIFICATION_MODIFIER: Record<HoldingClassification, string> = {
   growth: 'growth',
   defensive: 'defensive',
   cash: 'cash',
+  unclassified: 'cash',
 }
 
 interface AllocationLegendProps {

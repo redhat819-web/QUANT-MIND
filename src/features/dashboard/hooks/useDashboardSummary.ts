@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '../../../app/providers/AuthProvider'
+import { useDataSource } from '../../../app/providers/DataSourceProvider'
+import { getSupabase } from '../../../lib/supabase'
 import type { DashboardSummary } from '../../../types/domain'
+import { fetchDashboardSummaryFromSupabase } from '../api/supabaseDashboard'
 
 async function fetchDashboardSummary(): Promise<DashboardSummary> {
   const response = await fetch('/mock-api/dashboard-summary')
@@ -10,13 +14,20 @@ async function fetchDashboardSummary(): Promise<DashboardSummary> {
 }
 
 /**
- * Mock 어댑터. Sheets 어댑터(U5) 단계에서 이 훅의 내부 구현만
- * personal_aggregate_view/household_aggregate_view/allocation_view를 조회하는
- * supabase-js 호출로 교체하고, 반환 타입(DashboardSummary)은 그대로 유지한다.
+ * mock 모드는 MSW, supabase 모드는 personal_aggregate_view/household_aggregate_view/
+ * allocation_view를 조회한다(T055). 반환 타입(DashboardSummary)은 두 모드가 같다.
  */
 export function useDashboardSummary() {
+  const dataSource = useDataSource()
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   return useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: fetchDashboardSummary,
+    queryKey: ['dashboard-summary', dataSource, userId],
+    queryFn: () =>
+      dataSource === 'supabase'
+        ? fetchDashboardSummaryFromSupabase(getSupabase(), userId as string)
+        : fetchDashboardSummary(),
+    enabled: dataSource === 'mock' || userId !== null,
   })
 }
