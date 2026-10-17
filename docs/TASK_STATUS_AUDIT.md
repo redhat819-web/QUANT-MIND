@@ -5,6 +5,18 @@
 - 완료 기준: ① 파일 존재 ② 관련 테스트 통과 ③ main 브랜치에 커밋(미커밋 변경 없음)
 - **본 문서는 제안 초안이며, tasks.md의 체크 표시는 변경하지 않았습니다. 승인 후 반영합니다.**
 
+> **갱신 메모 (2026-10-17)**: 아래 Phase 8·9 판정("산출물이 저장소에 전혀 없음")은 조사일(2026-09-26) 기준이다.
+> 그 뒤 `supabase/migrations/`와 Supabase 어댑터가 추가되어 이 근거는 더 이상 맞지 않는다.
+> Phase 9(T060~T064)의 현재 상태는 **코드 완료, 실DB 검증 대기**다.
+> - 코드: `20261010120000_agenda_agreed_edit.sql`, `src/features/judgment-log/api/supabaseAgendas.ts`,
+>   `useAgendas`·`useAgendaDetail`의 `useDataSource()` 분기, `JudgmentLogPage.tsx`, `tests/integration/agenda-history.test.ts`
+>   (커밋 `056320c`)
+> - 검증: 판단 로그 단위 테스트 20개 통과(2026-10-17 실행). 통합 테스트 T064는 `QM_IT_*` 환경변수가 없어 실행된
+>   적이 없다. T065 수동 점검도 하지 않았다.
+> - 미체크는 의도된 상태다. tasks.md Phase 9 진행 메모에 "T065 수동 점검으로 확인한 뒤 T060~T064를 완료
+>   처리한다"고 적혀 있다. 절차는 `quickstart.md` §4·§4.5.
+> - Phase 8은 이번에 다시 감사하지 않았다(T055는 tasks.md에 `[X]`).
+
 ## 1. 전체 요약
 
 | 항목 | 수 |
@@ -144,6 +156,7 @@ T049~T059: `supabase/`, `apps-script/`, `contracts/supabase-schema.sql`, `contra
 ### Phase 9 — Supabase 협업(U4) (미체크, 정상)
 
 T060~T065: 위와 동일 사유로 실데이터 연동 기반 자체가 없음 → 미체크 상태와 일치. 판정: 일치(전체)
+(2026-09-26 기준. 현재 상태는 머리말 갱신 메모 참고)
 
 ### Phase 10 — Polish (미체크, 정상)
 
@@ -158,6 +171,7 @@ T066~T070: 관련 산출물 없음(quickstart.md는 존재하나 "최종 구현 
 
 ### Phase 9 (인증 관련 포함 아님 — Supabase 협업 U4)
 - Phase 9는 전부 미체크(T060~T065)이며 Supabase 스키마/RLS/Apps Script 산출물이 저장소에 전혀 없어 **미체크 상태가 정확합니다.** 별도 조치 불필요.
+  (2026-09-26 기준. 이후 코드가 추가됨. 현재 상태는 머리말 갱신 메모 참고)
 
 ### 인증 관련 Task (T009 AuthProvider, T010 ProtectedRoute/routes)
 - 이 두 Task는 tasks.md에 `[X]`로 체크되어 있으나, **현재 작업 트리의 파일이 main에 커밋된 버전과 다릅니다.**
